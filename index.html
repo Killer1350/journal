@@ -103,12 +103,39 @@
       <div><label>Symbol</label><input id="symbol" required></div>
     </div>
 
-    <div class="row">
-      <div><label>Direction</label>
-        <select id="dir"><option>Long</option><option>Short</option></select>
-      </div>
-      <div><label>Size</label><input type="number" id="size" step="any"></div>
-    </div>
+   <div class="row">
+  <div>
+    <label>Instrument</label>
+    <select id="instrument">
+      <option value="forex">Forex</option>
+      <option value="gold">Gold (XAUUSD)</option>
+      <option value="indices">Indices</option>
+      <option value="crypto">Crypto</option>
+      <option value="custom">Custom</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Direction</label>
+    <select id="dir">
+      <option>Long</option>
+      <option>Short</option>
+    </select>
+  </div>
+
+  <div>
+    <label>Lot / Size</label>
+    <input type="number" id="size" step="any" placeholder="0.10">
+  </div>
+</div>
+
+<div class="row" id="customWrap" style="display:none">
+  <div>
+    <label>Contract Size</label>
+    <input type="number" id="contract" step="any" placeholder="e.g. 100000">
+  </div>
+</div>
+
 
     <div class="row">
       <div><label>Entry</label><input type="number" id="entry" step="any" required></div>
@@ -144,10 +171,33 @@ let trades = JSON.parse(localStorage.getItem(KEY) || '[]');
 const $ = id => document.getElementById(id);
 
 function uid(){return 't'+Math.random().toString(36).slice(2,8)}
-
 function pnl(t){
-  const diff = t.dir==='Long' ? t.exit-t.entry : t.entry-t.exit;
-  return +(diff * (t.size||1) * 100000).toFixed(2);
+  const diff = t.dir === 'Long'
+    ? (t.exit - t.entry)
+    : (t.entry - t.exit);
+
+  let contract = 1;
+
+  switch (t.instrument) {
+    case 'forex':
+      contract = 100000;
+      break;
+    case 'gold':
+      contract = 100;
+      break;
+    case 'indices':
+      contract = 1;
+      break;
+    case 'crypto':
+      contract = 1;
+      break;
+    case 'custom':
+      contract = Number(t.contract) || 1;
+      break;
+  }
+
+  const size = Number(t.size) || 1;
+  return Number((diff * size * contract).toFixed(2));
 }
 
 function save(){localStorage.setItem(KEY, JSON.stringify(trades))}
@@ -175,21 +225,27 @@ function render(){
 
 form.onsubmit = e =>{
   e.preventDefault();
+
   const t = {
-    id: id.value||uid(),
+    id: id.value || uid(),
     date: date.value,
     symbol: symbol.value.toUpperCase(),
+    instrument: instrument.value,
     dir: dir.value,
-    entry:+entry.value,
-    exit:+exit.value,
-    size:+size.value||1,
+    entry: +entry.value,
+    exit: +exit.value,
+    size: +size.value || 1,
+    contract: +contract.value || null,
     notes: notes.value
   };
+
   t.pnl = pnl(t);
+
   const i = trades.findIndex(x=>x.id===t.id);
   i>-1 ? trades[i]=t : trades.push(t);
+
   save(); resetForm(); render();
-}
+};
 
 function edit(i){
   const t = trades.find(x=>x.id===i);
@@ -203,6 +259,10 @@ function resetForm(){form.reset(); id.value=''}
 reset.onclick=resetForm;
 
 clearAll.onclick=()=>{ if(confirm('Clear all trades?')){trades=[];save();render()} }
+instrument.onchange = () => {
+  customWrap.style.display =
+    instrument.value === 'custom' ? 'flex' : 'none';
+};
 
 render();
 </script>
