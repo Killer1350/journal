@@ -171,32 +171,48 @@ let trades = JSON.parse(localStorage.getItem(KEY) || '[]');
 const $ = id => document.getElementById(id);
 
 function uid(){return 't'+Math.random().toString(36).slice(2,8)}
-function pnl(t){
+function pnl(t) {
+  const entry = Number(t.entry);
+  const exit = Number(t.exit);
+  const size = Number(t.size) || 1;
+
   const diff = t.dir === 'Long'
-    ? (t.exit - t.entry)
-    : (t.entry - t.exit);
+    ? exit - entry
+    : entry - exit;
 
-  let contract = 1;
+  // ===== FOREX =====
+  if (t.instrument === 'forex') {
+    const symbol = t.symbol.toUpperCase();
 
-  switch (t.instrument) {
-    case 'forex':
-      contract = 100000;
-      break;
-    case 'gold':
-      contract = 100;
-      break;
-    case 'indices':
-      contract = 1;
-      break;
-    case 'crypto':
-      contract = 1;
-      break;
-    case 'custom':
-      contract = Number(t.contract) || 1;
-      break;
+    // pip size
+    const pip = symbol.includes('JPY') ? 0.01 : 0.0001;
+
+    const pips = diff / pip;
+
+    // pip value per lot (standard)
+    const pipValuePerLot = 10;
+
+    const pnl = pips * pipValuePerLot * size;
+    return Number(pnl.toFixed(2));
   }
 
-  const size = Number(t.size) || 1;
+  // ===== GOLD =====
+  if (t.instrument === 'gold') {
+    return Number((diff * size * 100).toFixed(2));
+  }
+
+  // ===== INDICES =====
+  if (t.instrument === 'indices') {
+    return Number((diff * size).toFixed(2));
+  }
+
+  // ===== CRYPTO =====
+  if (t.instrument === 'crypto') {
+    return Number((diff * size).toFixed(2));
+  }
+
+  // ===== CUSTOM =====
+  const contract = Number(t.contract) || 1;
   return Number((diff * size * contract).toFixed(2));
 }
 
