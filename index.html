@@ -3,899 +3,137 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#102543" />
-  <title>Trading Workbook</title>
-  <style>
-    :root {
-      --bg: #f3f6fb;
-      --surface: #ffffff;
-      --surface-soft: #eef3f9;
-      --text: #162235;
-      --muted: #687487;
-      --line: rgba(17, 35, 61, 0.12);
-      --line-strong: rgba(17, 35, 61, 0.18);
-      --navy: #102543;
-      --navy-deep: #0a1930;
-      --teal: #0f8a61;
-      --teal-soft: #ddf7ee;
-      --amber: #b7791f;
-      --amber-soft: #fff2dc;
-      --red: #c25252;
-      --red-soft: #fdeaea;
-      --shadow: 0 24px 70px rgba(16, 37, 67, 0.12);
-      --radius-xl: 30px;
-      --radius-lg: 22px;
-      --radius-md: 16px;
-      --radius-sm: 12px;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: "Aptos", "Segoe UI", "Trebuchet MS", sans-serif;
-      color: var(--text);
-      background:
-        radial-gradient(circle at top left, rgba(15, 138, 97, 0.14), transparent 28%),
-        radial-gradient(circle at top right, rgba(16, 37, 67, 0.18), transparent 24%),
-        linear-gradient(180deg, #f8fbff 0%, var(--bg) 52%, #eef2f7 100%);
-    }
-
-    body::before {
-      content: "";
-      position: fixed;
-      inset: 0;
-      pointer-events: none;
-      background-image:
-        linear-gradient(rgba(16, 37, 67, 0.025) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(16, 37, 67, 0.025) 1px, transparent 1px);
-      background-size: 34px 34px;
-      mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.5), transparent 90%);
-    }
-
-    .page {
-      position: relative;
-      max-width: 1260px;
-      margin: 0 auto;
-      padding: 28px 20px 48px;
-    }
-
-    .hero {
-      position: relative;
-      overflow: hidden;
-      padding: 32px;
-      border-radius: var(--radius-xl);
-      background:
-        linear-gradient(135deg, rgba(255, 255, 255, 0.06), transparent 52%),
-        linear-gradient(135deg, var(--navy-deep) 0%, var(--navy) 58%, #0c7e59 130%);
-      color: #f5f8fc;
-      box-shadow: 0 28px 90px rgba(7, 22, 41, 0.28);
-    }
-
-    .hero::after {
-      content: "";
-      position: absolute;
-      width: 360px;
-      height: 360px;
-      right: -120px;
-      top: -140px;
-      border-radius: 50%;
-      background: radial-gradient(circle, rgba(255, 255, 255, 0.14), transparent 70%);
-    }
-
-    .hero-top {
-      position: relative;
-      z-index: 1;
-      display: flex;
-      justify-content: space-between;
-      gap: 20px;
-      align-items: flex-start;
-      margin-bottom: 28px;
-    }
-
-    .eyebrow {
-      margin-bottom: 12px;
-      font-size: 11px;
-      letter-spacing: 0.2em;
-      text-transform: uppercase;
-      color: rgba(245, 248, 252, 0.68);
-    }
-
-    h1 {
-      margin: 0;
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2rem, 4vw, 3.2rem);
-      line-height: 0.98;
-      letter-spacing: -0.03em;
-    }
-
-    .hero-copy {
-      max-width: 720px;
-      margin: 14px 0 0;
-      font-size: 15px;
-      line-height: 1.7;
-      color: rgba(245, 248, 252, 0.8);
-    }
-
-    .hero-notes {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      justify-content: flex-end;
-    }
-
-    .chip {
-      padding: 10px 14px;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.16);
-      background: rgba(255, 255, 255, 0.08);
-      font-size: 12px;
-      color: #f5f8fc;
-      backdrop-filter: blur(12px);
-    }
-
-    .hero-stats {
-      position: relative;
-      z-index: 1;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .hero-stat {
-      padding: 18px 20px;
-      border-radius: 20px;
-      background: rgba(255, 255, 255, 0.08);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      backdrop-filter: blur(16px);
-    }
-
-    .hero-stat span {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 11px;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: rgba(245, 248, 252, 0.66);
-    }
-
-    .hero-stat strong {
-      display: block;
-      font-size: 1.7rem;
-      line-height: 1;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .layout {
-      display: grid;
-      grid-template-columns: minmax(0, 1.55fr) minmax(320px, 0.95fr);
-      gap: 24px;
-      margin-top: 24px;
-      align-items: start;
-    }
-
-    .workbook-stack {
-      margin-top: 24px;
-      display: grid;
-      gap: 24px;
-    }
-
-    .workbook-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 24px;
-      align-items: start;
-    }
-
-    .panel {
-      background: rgba(255, 255, 255, 0.86);
-      border: 1px solid rgba(255, 255, 255, 0.78);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow);
-      backdrop-filter: blur(14px);
-    }
-
-    .panel-pad {
-      padding: 24px;
-    }
-
-    .section-head {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      gap: 16px;
-      margin-bottom: 18px;
-    }
-
-    .section-head h2,
-    .section-head h3 {
-      margin: 0;
-      font-size: 1.1rem;
-      line-height: 1.2;
-    }
-
-    .section-copy {
-      margin: 6px 0 0;
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--muted);
-    }
-
-    .section-tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      background: var(--surface-soft);
-      border: 1px solid var(--line);
-      color: var(--navy);
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 18px;
-      border: 1px solid var(--line);
-      background: rgba(255, 255, 255, 0.7);
-    }
-
-    table {
-      width: 100%;
-      min-width: 860px;
-      border-collapse: collapse;
-    }
-
-    th,
-    td {
-      padding: 15px 16px;
-      text-align: left;
-      border-bottom: 1px solid var(--line);
-      font-size: 13px;
-      vertical-align: middle;
-    }
-
-    th {
-      position: sticky;
-      top: 0;
-      background: #f8fbff;
-      color: var(--muted);
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-    }
-
-    tbody tr {
-      transition: background 140ms ease, transform 140ms ease;
-    }
-
-    tbody tr:hover {
-      background: rgba(16, 37, 67, 0.035);
-    }
-
-    tbody tr:last-child td {
-      border-bottom: none;
-    }
-
-    .symbol-cell {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .symbol-cell strong {
-      font-size: 14px;
-      letter-spacing: 0.01em;
-    }
-
-    .subtle {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .mono {
-      font-variant-numeric: tabular-nums;
-      font-feature-settings: "tnum";
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      padding: 7px 10px;
-      border-radius: 999px;
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      white-space: nowrap;
-    }
-
-    .pill-market {
-      color: var(--navy);
-      background: #e7eef8;
-    }
-
-    .pill-forex { background: #e2f0ff; color: #1f4d7a; }
-    .pill-gold { background: #fff2d3; color: #8a6114; }
-    .pill-indices { background: #ebe7ff; color: #4c3c8b; }
-    .pill-crypto { background: #e7fcf2; color: #166445; }
-    .pill-custom { background: #edf0f4; color: #4e596a; }
-
-    .pill-long {
-      color: #0b6a4a;
-      background: var(--teal-soft);
-    }
-
-    .pill-short {
-      color: #a83f3f;
-      background: var(--red-soft);
-    }
-
-    .signal-buy {
-      color: #0b6a4a;
-      background: var(--teal-soft);
-    }
-
-    .signal-sell {
-      color: #a83f3f;
-      background: var(--red-soft);
-    }
-
-    .signal-wait {
-      color: #8a6114;
-      background: var(--amber-soft);
-    }
-
-    .signal-mixed {
-      color: var(--navy);
-      background: #dfeaf8;
-    }
-
-    .pnl {
-      font-weight: 700;
-    }
-
-    .pnl-pos {
-      color: var(--teal);
-    }
-
-    .pnl-neg {
-      color: var(--red);
-    }
-
-    .actions {
-      display: flex;
-      gap: 8px;
-    }
-
-    .btn {
-      appearance: none;
-      border: none;
-      border-radius: 12px;
-      padding: 11px 14px;
-      font: inherit;
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
-    }
-
-    .btn:hover {
-      transform: translateY(-1px);
-    }
-
-    .btn-primary {
-      color: #ffffff;
-      background: linear-gradient(135deg, #12724f 0%, #0f8a61 100%);
-      box-shadow: 0 14px 30px rgba(15, 138, 97, 0.22);
-    }
-
-    .btn-secondary {
-      color: var(--navy);
-      background: #eef3f9;
-      border: 1px solid var(--line);
-    }
-
-    .btn-danger {
-      color: var(--red);
-      background: var(--red-soft);
-      border: 1px solid rgba(194, 82, 82, 0.16);
-    }
-
-    .btn-link {
-      padding: 9px 12px;
-      color: var(--navy);
-      background: #f4f7fb;
-      border: 1px solid var(--line);
-    }
-
-    .stack {
-      display: grid;
-      gap: 20px;
-    }
-
-    .form-grid,
-    .config-grid,
-    .analysis-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 14px;
-    }
-
-    .field {
-      display: grid;
-      gap: 8px;
-    }
-
-    .field-full {
-      grid-column: 1 / -1;
-    }
-
-    label {
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-      font-weight: 700;
-    }
-
-    input,
-    select,
-    textarea {
-      width: 100%;
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: #fbfdff;
-      color: var(--text);
-      font: inherit;
-      transition: border-color 140ms ease, box-shadow 140ms ease, background 140ms ease;
-    }
-
-    input:focus,
-    select:focus,
-    textarea:focus {
-      outline: none;
-      border-color: rgba(15, 138, 97, 0.45);
-      box-shadow: 0 0 0 4px rgba(15, 138, 97, 0.12);
-      background: #ffffff;
-    }
-
-    textarea {
-      min-height: 112px;
-      resize: vertical;
-      line-height: 1.6;
-    }
-
-    .helper {
-      margin-top: 8px;
-      font-size: 12px;
-      line-height: 1.6;
-      color: var(--muted);
-    }
-
-    .warning {
-      margin-top: 8px;
-      padding: 14px 16px;
-      border-radius: 16px;
-      background: var(--amber-soft);
-      border: 1px solid rgba(183, 121, 31, 0.16);
-      color: #724c0e;
-      font-size: 12px;
-      line-height: 1.7;
-    }
-
-    .form-actions,
-    .config-actions {
-      display: flex;
-      gap: 10px;
-      flex-wrap: wrap;
-      margin-top: 4px;
-    }
-
-    .metrics {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .metric {
-      padding: 18px;
-      border-radius: 18px;
-      background: var(--surface-soft);
-      border: 1px solid rgba(16, 37, 67, 0.07);
-    }
-
-    .metric span {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 11px;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .metric strong {
-      display: block;
-      font-size: 1.45rem;
-      line-height: 1.05;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .metric-positive strong {
-      color: var(--teal);
-    }
-
-    .metric-negative strong {
-      color: var(--red);
-    }
-
-    .callout {
-      padding: 18px;
-      border-radius: 18px;
-      background: linear-gradient(180deg, rgba(16, 37, 67, 0.035), rgba(16, 37, 67, 0.015));
-      border: 1px solid var(--line);
-    }
-
-    .callout h3 {
-      margin: 0 0 8px;
-      font-size: 0.98rem;
-    }
-
-    .callout p {
-      margin: 0;
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--muted);
-    }
-
-    .status-row {
-      display: flex;
-      gap: 10px;
-      align-items: center;
-      flex-wrap: wrap;
-      margin: 12px 0 0;
-    }
-
-    .status-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      background: var(--surface-soft);
-      border: 1px solid var(--line);
-      color: var(--navy);
-    }
-
-    .status-badge::before {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: currentColor;
-      opacity: 0.7;
-    }
-
-    .status-ready {
-      color: var(--teal);
-      background: var(--teal-soft);
-      border-color: rgba(15, 138, 97, 0.16);
-    }
-
-    .status-wait {
-      color: var(--amber);
-      background: var(--amber-soft);
-      border-color: rgba(183, 121, 31, 0.16);
-    }
-
-    .status-error {
-      color: var(--red);
-      background: var(--red-soft);
-      border-color: rgba(194, 82, 82, 0.16);
-    }
-
-    .status-note {
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.6;
-    }
-
-    .preview-box {
-      min-height: 220px;
-      display: grid;
-      place-items: center;
-      border-radius: 18px;
-      border: 1px dashed var(--line-strong);
-      background:
-        linear-gradient(180deg, rgba(16, 37, 67, 0.02), rgba(16, 37, 67, 0.03)),
-        var(--surface);
-      overflow: hidden;
-      text-align: center;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .preview-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-    }
-
-    .result-shell {
-      margin-top: 18px;
-      padding: 18px;
-      border-radius: 20px;
-      background: linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(245, 248, 252, 0.9));
-      border: 1px solid var(--line);
-    }
-
-    .result-empty {
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.7;
-    }
-
-    .result-header {
-      display: flex;
-      justify-content: space-between;
-      gap: 14px;
-      align-items: flex-start;
-      flex-wrap: wrap;
-      margin-bottom: 16px;
-    }
-
-    .result-title {
-      display: grid;
-      gap: 6px;
-    }
-
-    .result-title strong {
-      font-size: 1.05rem;
-    }
-
-    .result-meta {
-      font-size: 12px;
-      color: var(--muted);
-    }
-
-    .result-grid {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 12px;
-      margin-top: 14px;
-    }
-
-    .result-card {
-      padding: 16px;
-      border-radius: 16px;
-      background: var(--surface-soft);
-      border: 1px solid rgba(16, 37, 67, 0.08);
-    }
-
-    .result-card h4 {
-      margin: 0 0 10px;
-      font-size: 12px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--muted);
-    }
-
-    .result-card p,
-    .result-card ul {
-      margin: 0;
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--text);
-    }
-
-    .result-card ul {
-      padding-left: 18px;
-    }
-
-    .result-card li + li {
-      margin-top: 6px;
-    }
-
-    .result-card.full {
-      grid-column: 1 / -1;
-    }
-
-    .citation-list {
-      display: grid;
-      gap: 10px;
-      margin-top: 14px;
-    }
-
-    .citation-item {
-      padding: 12px 14px;
-      border-radius: 14px;
-      background: #fbfdff;
-      border: 1px solid var(--line);
-      font-size: 12px;
-      line-height: 1.6;
-    }
-
-    .citation-item a {
-      color: var(--navy);
-      text-decoration: none;
-      font-weight: 700;
-    }
-
-    .citation-item a:hover {
-      text-decoration: underline;
-    }
-
-    .empty {
-      padding: 36px 24px;
-      text-align: center;
-      color: var(--muted);
-    }
-
-    .footer-note {
-      margin-top: 18px;
-      font-size: 12px;
-      line-height: 1.6;
-      color: var(--muted);
-    }
-
-    @media (max-width: 1080px) {
-      .hero-stats,
-      .workbook-grid {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 760px) {
-      .page {
-        padding-inline: 14px;
-      }
-
-      .hero {
-        padding: 24px;
-      }
-
-      .hero-top {
-        flex-direction: column;
-      }
-
-      .hero-notes {
-        justify-content: flex-start;
-      }
-
-      .hero-stats,
-      .metrics,
-      .form-grid,
-      .config-grid,
-      .analysis-grid,
-      .workbook-grid,
-      .result-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .panel-pad {
-        padding: 18px;
-      }
-
-      .section-head {
-        flex-direction: column;
-      }
-
-      .actions,
-      .form-actions {
-        flex-wrap: wrap;
-      }
-    }
-  </style>
+  <meta name="theme-color" content="#0f2038" />
+  <title>Trading Workbook | SignalPro</title>
+  <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
-  <div class="page">
-    <section class="hero">
-      <div class="hero-top">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-mark">SP</div>
         <div>
-          <div class="eyebrow">Journal + Research + Review</div>
-          <h1>Trading Workbook</h1>
-          <p class="hero-copy">
-            Your personal desk for logging execution, reviewing chart structure, and checking live macro catalysts so decisions stay tied to process instead of impulse.
+          <div class="brand-kicker">Private Trading Desk</div>
+          <div class="brand-title">SignalPro Workbook</div>
+        </div>
+      </div>
+
+      <div class="sidebar-block">
+        <div class="sidebar-label">Workspace</div>
+        <div class="sidebar-card">
+          <div class="sidebar-card-title">Journal + Research + Review</div>
+          <p class="sidebar-copy">
+            One desk for execution tracking, chart intelligence, macro scanning, and fast AI-assisted trade planning.
           </p>
         </div>
-        <div class="hero-notes">
-          <div class="chip">Local journal storage</div>
-          <div class="chip">AI chart desk</div>
-          <div class="chip">AI news desk</div>
-        </div>
       </div>
-      <div class="hero-stats">
-        <div class="hero-stat">
-          <span>Net P&amp;L</span>
-          <strong id="heroTotal">0.00</strong>
-        </div>
-        <div class="hero-stat">
-          <span>Win Rate</span>
-          <strong id="heroWin">0%</strong>
-        </div>
-        <div class="hero-stat">
-          <span>Trades Logged</span>
-          <strong id="heroCount">0</strong>
-        </div>
-        <div class="hero-stat">
-          <span>Average Trade</span>
-          <strong id="heroAverage">0.00</strong>
-        </div>
-      </div>
-    </section>
 
-    <div class="layout">
-      <section class="panel panel-pad">
-        <div class="section-head">
-          <div>
-            <h2>Trade Ledger</h2>
-            <p class="section-copy">
-              Review every entry in one place. Keep your records current so post-trade analysis stays objective.
-            </p>
+      <div class="sidebar-block">
+        <div class="sidebar-label">AI Modes</div>
+        <div class="sidebar-list">
+          <div class="sidebar-pill">Chart Vision</div>
+          <div class="sidebar-pill">Macro Radar</div>
+          <div class="sidebar-pill">Desk Copilot</div>
+        </div>
+      </div>
+
+      <div class="sidebar-block">
+        <div class="sidebar-label">Engine</div>
+        <div class="sidebar-card compact">
+          <div class="status-badge status-wait" id="aiConfigStatus">Checking engine</div>
+          <p class="sidebar-copy" id="aiConfigNote">
+            The workspace is checking whether the hosted AI engine is online and ready.
+          </p>
+        </div>
+      </div>
+
+      <div class="sidebar-foot">
+        Hosted mode keeps the OpenAI key on the server, not in the browser.
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <div class="hero-copy">
+          <div class="eyebrow">Execution Meets Intelligence</div>
+          <h1>Trade like you have a desk, not just a journal.</h1>
+          <p>
+            Track performance, inspect chart screenshots, monitor live fundamentals, and ask for structured trade plans inside one professional workspace.
+          </p>
+        </div>
+
+        <div class="hero-metrics">
+          <div class="hero-metric">
+            <span>Net P&amp;L</span>
+            <strong id="heroTotal">0.00</strong>
           </div>
-          <button class="btn btn-danger" id="clearAll" type="button">Clear Journal</button>
-        </div>
-
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Symbol</th>
-                <th>Market</th>
-                <th>Side</th>
-                <th>Size</th>
-                <th>Entry</th>
-                <th>Exit</th>
-                <th>P&amp;L</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="rows"></tbody>
-          </table>
-        </div>
-
-        <div class="footer-note">
-          Journal data stays in this browser. The AI settings you save below are also local to this browser unless you move the site to a backend later.
+          <div class="hero-metric">
+            <span>Win Rate</span>
+            <strong id="heroWin">0%</strong>
+          </div>
+          <div class="hero-metric">
+            <span>Trades Logged</span>
+            <strong id="heroCount">0</strong>
+          </div>
+          <div class="hero-metric">
+            <span>Average Trade</span>
+            <strong id="heroAverage">0.00</strong>
+          </div>
         </div>
       </section>
 
-      <aside class="stack">
-        <section class="panel panel-pad" id="formPanel">
-          <div class="section-head">
+      <div class="main-grid">
+        <section class="panel ledger-panel">
+          <div class="panel-head">
             <div>
-              <h3 id="formTitle">Add Trade</h3>
-              <p class="section-copy" id="formSubtitle">
-                Log the position details immediately after execution so your post-trade review stays accurate.
+              <div class="panel-kicker">Execution Ledger</div>
+              <h2>Trade Journal</h2>
+              <p class="panel-copy">
+                Review every position in one place so the journal becomes a real decision archive, not just a list of entries.
               </p>
             </div>
+            <button class="btn btn-danger" id="clearAll" type="button">Clear Journal</button>
           </div>
 
-          <form id="journalForm">
-            <input type="hidden" id="tradeId" />
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Symbol</th>
+                  <th>Market</th>
+                  <th>Side</th>
+                  <th>Size</th>
+                  <th>Entry</th>
+                  <th>Exit</th>
+                  <th>P&amp;L</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="rows"></tbody>
+            </table>
+          </div>
 
-            <div class="form-grid">
+          <div class="panel-note">
+            Trades are stored in this browser for your personal journal history.
+          </div>
+        </section>
+
+        <aside class="stack">
+          <section class="panel" id="formPanel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Journal Entry</div>
+                <h3 id="formTitle">Add Trade</h3>
+                <p class="panel-copy" id="formSubtitle">
+                  Log the position details immediately after execution so your review stays accurate.
+                </p>
+              </div>
+            </div>
+
+            <form id="journalForm" class="form-grid">
+              <input type="hidden" id="tradeId" />
+
               <div class="field">
                 <label for="date">Date</label>
                 <input type="date" id="date" required />
@@ -944,1024 +182,236 @@
               <div class="field field-full">
                 <label for="notes">Notes</label>
                 <textarea id="notes" placeholder="Setup quality, execution notes, emotions, mistakes, or what you want to review later."></textarea>
-                <div class="helper">Use notes for process review, not just results. That is where a journal becomes useful.</div>
+              </div>
+
+              <div class="form-actions field-full">
+                <button class="btn btn-primary" type="submit" id="saveButton">Save Trade</button>
+                <button class="btn btn-secondary" type="button" id="resetForm">Reset Form</button>
+              </div>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-head">
+              <div>
+                <div class="panel-kicker">Performance Snapshot</div>
+                <h3>Journal Metrics</h3>
               </div>
             </div>
 
-            <div class="form-actions">
-              <button class="btn btn-primary" type="submit" id="saveButton">Save Trade</button>
-              <button class="btn btn-secondary" type="button" id="resetForm">Reset Form</button>
+            <div class="metrics">
+              <div class="metric-card" id="metricTotalCard">
+                <span>Total P&amp;L</span>
+                <strong id="total">0.00</strong>
+              </div>
+              <div class="metric-card">
+                <span>Win Rate</span>
+                <strong id="win">0%</strong>
+              </div>
+              <div class="metric-card">
+                <span>Trades</span>
+                <strong id="count">0</strong>
+              </div>
+              <div class="metric-card" id="metricBestCard">
+                <span>Best Trade</span>
+                <strong id="best">0.00</strong>
+              </div>
             </div>
-          </form>
-        </section>
+          </section>
 
-        <section class="panel panel-pad">
-          <div class="section-head">
-            <div>
-              <h3>Performance Snapshot</h3>
-              <p class="section-copy">
-                Quick figures for the current workbook so you can spot drift in execution quality at a glance.
-              </p>
-            </div>
-          </div>
+          <section class="panel insight-card">
+            <div class="panel-kicker">Review Standard</div>
+            <p id="reviewNote">
+              A strong workbook captures the setup, the catalyst, the risk, and whether the execution followed plan. Keep those four parts consistent.
+            </p>
+          </section>
+        </aside>
+      </div>
 
-          <div class="metrics">
-            <div class="metric" id="metricTotalCard">
-              <span>Total P&amp;L</span>
-              <strong id="total">0.00</strong>
-            </div>
-            <div class="metric">
-              <span>Win Rate</span>
-              <strong id="win">0%</strong>
-            </div>
-            <div class="metric">
-              <span>Trades</span>
-              <strong id="count">0</strong>
-            </div>
-            <div class="metric" id="metricBestCard">
-              <span>Best Trade</span>
-              <strong id="best">0.00</strong>
-            </div>
-          </div>
-        </section>
-
-        <section class="callout">
-          <h3>Review Standard</h3>
-          <p id="reviewNote">
-            A strong workbook captures the setup, the catalyst, the risk, and whether the execution followed plan. Keep those four parts consistent.
-          </p>
-        </section>
-      </aside>
-    </div>
-
-    <section class="workbook-stack">
-      <section class="panel panel-pad">
-        <div class="section-head">
+      <section class="panel signalpro-shell">
+        <div class="panel-head">
           <div>
-            <h2>AI Workspace</h2>
-            <p class="section-copy">
-              Configure your personal AI desk once, then use it to review screenshots and scan live market news without leaving the workbook.
+            <div class="panel-kicker">SignalPro Intelligence</div>
+            <h2>AI Trading Workspace</h2>
+            <p class="panel-copy">
+              A hosted AI desk for visual chart reads, live fundamental scanning, and fast trading copilot workflows.
             </p>
           </div>
-          <div class="section-tag">Personal Use Setup</div>
+          <div class="brand-chip">Server Protected</div>
         </div>
 
-        <form id="aiConfigForm">
-          <div class="config-grid">
-            <div class="field">
-              <label for="apiKey">OpenAI API Key</label>
-              <input id="apiKey" type="password" placeholder="sk-..." autocomplete="off" />
-            </div>
-            <div class="field">
-              <label for="chartModel">Chart Analysis Model</label>
-              <input id="chartModel" value="gpt-5-mini" />
-            </div>
-            <div class="field">
-              <label for="newsModel">News Analysis Model</label>
-              <input id="newsModel" value="gpt-5-mini" />
-            </div>
-            <div class="field">
-              <label for="apiBase">API Base URL</label>
-              <input id="apiBase" value="https://api.openai.com/v1" />
-            </div>
+        <div class="signal-overview">
+          <div class="signal-card">
+            <h4>Chart Vision</h4>
+            <p>Visual structure analysis with directional bias, invalidation, confluences, and execution prompts.</p>
           </div>
-
-          <div class="warning">
-            Browser-stored API keys are acceptable only for a private personal setup. If you plan to host this publicly, move the AI requests behind your own server so the key is never exposed to visitors.
+          <div class="signal-card">
+            <h4>Macro Radar</h4>
+            <p>Live web-based market research focused on the current drivers behind a symbol or asset.</p>
           </div>
-
-          <div class="config-actions">
-            <button class="btn btn-primary" type="submit">Save AI Settings</button>
-            <button class="btn btn-secondary" type="button" id="clearAiSettings">Clear AI Settings</button>
+          <div class="signal-card">
+            <h4>Desk Copilot</h4>
+            <p>A chat-style assistant for trade plans, market questions, and deeper review prompts.</p>
           </div>
-        </form>
-
-        <div class="status-row">
-          <div class="status-badge status-wait" id="aiConfigStatus">AI not configured</div>
-          <div class="status-note" id="aiConfigNote">Add your key to enable chart and fundamental analysis inside this workbook.</div>
         </div>
       </section>
 
-      <div class="workbook-grid">
-        <section class="panel panel-pad">
-          <div class="section-head">
+      <div class="signal-grid">
+        <section class="panel">
+          <div class="panel-head">
             <div>
-              <h3>Chart Signal Desk</h3>
-              <p class="section-copy">
-                Upload a chart screenshot and get a structured read on bias, setup quality, invalidation, and the conditions that would make the idea tradable or not tradable.
-              </p>
+              <div class="panel-kicker">Visual Signal Analysis</div>
+              <h3>Chart Vision Agent</h3>
             </div>
-            <div class="section-tag">Vision Analysis</div>
+            <div class="section-tag">Image + Structure</div>
           </div>
 
-          <form id="chartForm">
-            <div class="analysis-grid">
-              <div class="field">
-                <label for="chartSymbol">Symbol</label>
-                <input id="chartSymbol" placeholder="XAUUSD" required />
-              </div>
-              <div class="field">
-                <label for="chartTimeframe">Timeframe</label>
-                <input id="chartTimeframe" placeholder="H1 / H4 / 15m" required />
-              </div>
-              <div class="field field-full">
-                <label for="chartImage">Chart Screenshot</label>
-                <input id="chartImage" type="file" accept="image/*" required />
-              </div>
-              <div class="field field-full">
-                <label for="chartNotes">Trader Context</label>
-                <textarea id="chartNotes" placeholder="Optional context: session, setup idea, key levels, or what you want the AI to focus on."></textarea>
-              </div>
+          <form id="chartForm" class="form-grid compact-grid">
+            <div class="field">
+              <label for="chartSymbol">Symbol</label>
+              <input id="chartSymbol" placeholder="XAUUSD" required />
             </div>
-
-            <div class="form-actions">
-              <button class="btn btn-primary" type="submit">Analyze Chart</button>
+            <div class="field">
+              <label for="chartTimeframe">Timeframe</label>
+              <input id="chartTimeframe" placeholder="H1 / H4 / 15m" required />
+            </div>
+            <div class="field field-full">
+              <label for="chartImage">Chart Screenshot</label>
+              <input id="chartImage" type="file" accept="image/*" required />
+            </div>
+            <div class="field field-full">
+              <label for="chartNotes">Trader Context</label>
+              <textarea id="chartNotes" placeholder="Session, setup idea, marked levels, or what you want the model to concentrate on."></textarea>
+            </div>
+            <div class="form-actions field-full">
+              <button class="btn btn-primary" type="submit">Run Chart Vision</button>
               <button class="btn btn-secondary" type="button" id="resetChart">Reset Chart Desk</button>
             </div>
           </form>
 
           <div class="status-row">
             <div class="status-badge status-wait" id="chartStatus">Awaiting screenshot</div>
-            <div class="status-note" id="chartStatusNote">The AI will give a conditional signal such as buy setup, sell setup, or wait, plus the reasoning behind it.</div>
+            <div class="status-note" id="chartStatusNote">The AI returns a conditional trade read, not a guaranteed signal.</div>
           </div>
 
           <div class="result-shell">
             <div class="preview-box" id="chartPreview">
-              Upload a screenshot to review structure, momentum, and trade conditions.
+              Upload a screenshot to inspect structure, momentum, and execution quality.
             </div>
-            <div id="chartResult" class="result-empty" style="margin-top:16px;">
+            <div id="chartResult" class="result-empty">
               No chart analysis yet.
             </div>
           </div>
         </section>
 
-        <section class="panel panel-pad">
-          <div class="section-head">
+        <section class="panel">
+          <div class="panel-head">
             <div>
-              <h3>Fundamental News Desk</h3>
-              <p class="section-copy">
-                Scan the latest macro and market headlines for a symbol, then turn them into a trader-focused fundamental bias with key risks and next catalysts.
-              </p>
+              <div class="panel-kicker">Live Market Research</div>
+              <h3>Macro Radar Agent</h3>
             </div>
-            <div class="section-tag">Live Web Research</div>
+            <div class="section-tag">Web Search Intelligence</div>
           </div>
 
-          <form id="newsForm">
-            <div class="analysis-grid">
-              <div class="field">
-                <label for="newsSymbol">Symbol / Asset</label>
-                <input id="newsSymbol" placeholder="EURUSD, BTCUSD, NAS100" required />
-              </div>
-              <div class="field">
-                <label for="newsHorizon">Trading Horizon</label>
-                <select id="newsHorizon">
-                  <option>Intraday</option>
-                  <option>Swing</option>
-                  <option>Position</option>
-                </select>
-              </div>
-              <div class="field field-full">
-                <label for="newsFocus">Focus</label>
-                <input id="newsFocus" placeholder="Rates, CPI, central banks, earnings, risk sentiment, flows" />
-              </div>
-              <div class="field field-full">
-                <label for="newsNotes">Extra Notes</label>
-                <textarea id="newsNotes" placeholder="Optional context: your bias, upcoming data release, or what you want the AI to prioritize."></textarea>
-              </div>
+          <form id="newsForm" class="form-grid compact-grid">
+            <div class="field">
+              <label for="newsSymbol">Symbol / Asset</label>
+              <input id="newsSymbol" placeholder="EURUSD, BTCUSD, NAS100" required />
             </div>
-
-            <div class="form-actions">
-              <button class="btn btn-primary" type="submit">Analyze Fundamentals</button>
-              <button class="btn btn-secondary" type="button" id="resetNews">Reset News Desk</button>
+            <div class="field">
+              <label for="newsHorizon">Trading Horizon</label>
+              <select id="newsHorizon">
+                <option>Intraday</option>
+                <option>Swing</option>
+                <option>Position</option>
+              </select>
+            </div>
+            <div class="field field-full">
+              <label for="newsFocus">Focus</label>
+              <input id="newsFocus" placeholder="Rates, CPI, central banks, earnings, risk sentiment, flows" />
+            </div>
+            <div class="field field-full">
+              <label for="newsNotes">Extra Notes</label>
+              <textarea id="newsNotes" placeholder="Your current bias, known event risk, or the angle you want the AI to prioritize."></textarea>
+            </div>
+            <div class="form-actions field-full">
+              <button class="btn btn-primary" type="submit">Run Macro Radar</button>
+              <button class="btn btn-secondary" type="button" id="resetNews">Reset Macro Radar</button>
             </div>
           </form>
 
           <div class="status-row">
             <div class="status-badge status-wait" id="newsStatus">Awaiting query</div>
-            <div class="status-note" id="newsStatusNote">This uses web-enabled AI research, so results depend on live news coverage and your API access.</div>
+            <div class="status-note" id="newsStatusNote">This agent searches current web coverage and summarizes the market implications.</div>
           </div>
 
           <div class="result-shell">
-            <div id="newsResult" class="result-empty">
-              No fundamental analysis yet.
-            </div>
+            <div id="newsResult" class="result-empty">No fundamental analysis yet.</div>
             <div id="newsSources"></div>
           </div>
         </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-kicker">Interactive Market Assistant</div>
+              <h3>Desk Copilot</h3>
+            </div>
+            <div class="section-tag">Chat-Style Workflow</div>
+          </div>
+
+          <form id="copilotForm" class="form-grid compact-grid">
+            <div class="field">
+              <label for="copilotMode">Copilot Mode</label>
+              <select id="copilotMode">
+                <option value="trade-plan">Trade Plan</option>
+                <option value="journal-review">Journal Review</option>
+                <option value="market-question">Market Question</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="copilotSymbol">Symbol / Topic</label>
+              <input id="copilotSymbol" placeholder="GBPUSD or your trading question" required />
+            </div>
+            <div class="field field-full">
+              <label for="copilotPrompt">Ask The Desk</label>
+              <textarea id="copilotPrompt" placeholder="Example: Build me a clean intraday trade plan for GBPUSD around London open, with levels to watch, invalidation, and what would make the setup not worth taking."></textarea>
+            </div>
+            <div class="form-actions field-full">
+              <button class="btn btn-primary" type="submit">Ask Copilot</button>
+              <button class="btn btn-secondary" type="button" id="resetCopilot">Reset Copilot</button>
+            </div>
+          </form>
+
+          <div class="status-row">
+            <div class="status-badge status-wait" id="copilotStatus">Ready for prompt</div>
+            <div class="status-note" id="copilotStatusNote">Use this as your fast AI assistant for planning, review, and market questions.</div>
+          </div>
+
+          <div class="copilot-box" id="copilotResult">
+            <p>No copilot response yet.</p>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head">
+            <div>
+              <div class="panel-kicker">Live Terminal</div>
+              <h3>AI Briefing Stream</h3>
+              <p class="panel-copy">
+                The desk logs recent chart, macro, and copilot outputs so your workflow feels more like a live intelligence terminal.
+              </p>
+            </div>
+          </div>
+
+          <div class="stream-shell" id="briefingStream">
+            <div class="stream-empty">Run any AI mode to start building a live briefing stream here.</div>
+          </div>
+        </section>
       </div>
-    </section>
+    </main>
   </div>
 
-  <script>
-    const KEY = "journal_v2";
-    const AI_SETTINGS_KEY = "journal_ai_settings_v1";
-    const numberFormatter = new Intl.NumberFormat("en-US", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2
-    });
-
-    const instrumentLabels = {
-      forex: "Forex",
-      gold: "Gold",
-      indices: "Indices",
-      crypto: "Crypto",
-      custom: "Custom"
-    };
-
-    const chartSchema = {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        market_bias: { type: "string" },
-        signal: { type: "string" },
-        confidence: { type: "number" },
-        setup_summary: { type: "string" },
-        entry_zone: { type: "string" },
-        invalidation: { type: "string" },
-        targets: { type: "array", items: { type: "string" } },
-        confluences: { type: "array", items: { type: "string" } },
-        risk_notes: { type: "array", items: { type: "string" } },
-        execution_checklist: { type: "array", items: { type: "string" } },
-        journal_prompt: { type: "string" }
-      },
-      required: [
-        "market_bias",
-        "signal",
-        "confidence",
-        "setup_summary",
-        "entry_zone",
-        "invalidation",
-        "targets",
-        "confluences",
-        "risk_notes",
-        "execution_checklist",
-        "journal_prompt"
-      ]
-    };
-
-    const newsSchema = {
-      type: "object",
-      additionalProperties: false,
-      properties: {
-        macro_bias: { type: "string" },
-        confidence: { type: "number" },
-        summary: { type: "string" },
-        bullish_case: { type: "string" },
-        bearish_case: { type: "string" },
-        key_catalysts: { type: "array", items: { type: "string" } },
-        risk_watch: { type: "array", items: { type: "string" } },
-        next_actions: { type: "array", items: { type: "string" } },
-        workbook_prompt: { type: "string" }
-      },
-      required: [
-        "macro_bias",
-        "confidence",
-        "summary",
-        "bullish_case",
-        "bearish_case",
-        "key_catalysts",
-        "risk_watch",
-        "next_actions",
-        "workbook_prompt"
-      ]
-    };
-
-    const els = {
-      rows: document.getElementById("rows"),
-      clearAll: document.getElementById("clearAll"),
-      form: document.getElementById("journalForm"),
-      formPanel: document.getElementById("formPanel"),
-      formTitle: document.getElementById("formTitle"),
-      formSubtitle: document.getElementById("formSubtitle"),
-      tradeId: document.getElementById("tradeId"),
-      date: document.getElementById("date"),
-      symbol: document.getElementById("symbol"),
-      instrument: document.getElementById("instrument"),
-      dir: document.getElementById("dir"),
-      size: document.getElementById("size"),
-      contract: document.getElementById("contract"),
-      contractWrap: document.getElementById("contractWrap"),
-      entry: document.getElementById("entry"),
-      exit: document.getElementById("exit"),
-      notes: document.getElementById("notes"),
-      resetForm: document.getElementById("resetForm"),
-      saveButton: document.getElementById("saveButton"),
-      total: document.getElementById("total"),
-      win: document.getElementById("win"),
-      count: document.getElementById("count"),
-      best: document.getElementById("best"),
-      heroTotal: document.getElementById("heroTotal"),
-      heroWin: document.getElementById("heroWin"),
-      heroCount: document.getElementById("heroCount"),
-      heroAverage: document.getElementById("heroAverage"),
-      metricTotalCard: document.getElementById("metricTotalCard"),
-      metricBestCard: document.getElementById("metricBestCard"),
-      reviewNote: document.getElementById("reviewNote"),
-      apiKey: document.getElementById("apiKey"),
-      chartModel: document.getElementById("chartModel"),
-      newsModel: document.getElementById("newsModel"),
-      apiBase: document.getElementById("apiBase"),
-      aiConfigForm: document.getElementById("aiConfigForm"),
-      clearAiSettings: document.getElementById("clearAiSettings"),
-      aiConfigStatus: document.getElementById("aiConfigStatus"),
-      aiConfigNote: document.getElementById("aiConfigNote"),
-      chartForm: document.getElementById("chartForm"),
-      chartSymbol: document.getElementById("chartSymbol"),
-      chartTimeframe: document.getElementById("chartTimeframe"),
-      chartImage: document.getElementById("chartImage"),
-      chartNotes: document.getElementById("chartNotes"),
-      chartPreview: document.getElementById("chartPreview"),
-      chartStatus: document.getElementById("chartStatus"),
-      chartStatusNote: document.getElementById("chartStatusNote"),
-      chartResult: document.getElementById("chartResult"),
-      resetChart: document.getElementById("resetChart"),
-      newsForm: document.getElementById("newsForm"),
-      newsSymbol: document.getElementById("newsSymbol"),
-      newsHorizon: document.getElementById("newsHorizon"),
-      newsFocus: document.getElementById("newsFocus"),
-      newsNotes: document.getElementById("newsNotes"),
-      newsStatus: document.getElementById("newsStatus"),
-      newsStatusNote: document.getElementById("newsStatusNote"),
-      newsResult: document.getElementById("newsResult"),
-      newsSources: document.getElementById("newsSources"),
-      resetNews: document.getElementById("resetNews")
-    };
-
-    let trades = loadTrades();
-
-    function loadTrades() {
-      const saved = JSON.parse(localStorage.getItem(KEY) || "[]");
-      return saved.map(normalizeTrade);
-    }
-
-    function normalizeTrade(raw) {
-      const trade = {
-        id: raw.id || uid(),
-        date: raw.date || "",
-        symbol: String(raw.symbol || "").toUpperCase(),
-        instrument: raw.instrument || "forex",
-        dir: raw.dir === "Short" ? "Short" : "Long",
-        size: Number(raw.size) || 1,
-        contract: Number(raw.contract) || "",
-        entry: Number(raw.entry) || 0,
-        exit: Number(raw.exit) || 0,
-        notes: raw.notes || ""
-      };
-
-      const storedPnl = Number(raw.pnl);
-      trade.pnl = Number.isFinite(storedPnl) ? storedPnl : calculatePnl(trade);
-      return trade;
-    }
-
-    function uid() {
-      return "t_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
-    }
-
-    function todayValue() {
-      return new Date().toISOString().slice(0, 10);
-    }
-
-    function roundToCents(value) {
-      return Number(value.toFixed(2));
-    }
-
-    function calculatePnl(trade) {
-      const entry = Number(trade.entry);
-      const exit = Number(trade.exit);
-      const size = Number(trade.size) || 1;
-      const directionMultiplier = trade.dir === "Long" ? 1 : -1;
-      const diff = (exit - entry) * directionMultiplier;
-
-      if (trade.instrument === "forex") {
-        const upperSymbol = String(trade.symbol || "").toUpperCase();
-        const pipSize = upperSymbol.includes("JPY") ? 0.01 : 0.0001;
-        const pips = diff / pipSize;
-        const pipValuePerLot = 10;
-        return roundToCents(pips * pipValuePerLot * size);
-      }
-
-      if (trade.instrument === "gold") {
-        return roundToCents(diff * size * 100);
-      }
-
-      if (trade.instrument === "indices" || trade.instrument === "crypto") {
-        return roundToCents(diff * size);
-      }
-
-      const contract = Number(trade.contract) || 1;
-      return roundToCents(diff * size * contract);
-    }
-
-    function saveTrades() {
-      localStorage.setItem(KEY, JSON.stringify(trades));
-    }
-
-    function escapeHtml(value) {
-      return String(value).replace(/[&<>"']/g, (char) => {
-        const map = {
-          "&": "&amp;",
-          "<": "&lt;",
-          ">": "&gt;",
-          "\"": "&quot;",
-          "'": "&#39;"
-        };
-        return map[char];
-      });
-    }
-
-    function formatNumber(value) {
-      return numberFormatter.format(Number(value) || 0);
-    }
-
-    function formatSigned(value) {
-      const numeric = Number(value) || 0;
-      if (numeric === 0) return "0.00";
-      return (numeric > 0 ? "+" : "-") + formatNumber(Math.abs(numeric));
-    }
-
-    function listMarkup(items) {
-      if (!Array.isArray(items) || !items.length) {
-        return "<p>None noted.</p>";
-      }
-
-      return "<ul>" + items.map((item) => "<li>" + escapeHtml(item) + "</li>").join("") + "</ul>";
-    }
-
-    function statusClass(mode) {
-      if (mode === "ready") return "status-badge status-ready";
-      if (mode === "error") return "status-badge status-error";
-      return "status-badge status-wait";
-    }
-
-    function setStatus(node, mode, label) {
-      node.className = statusClass(mode);
-      node.textContent = label;
-    }
-
-    function loadAiSettings() {
-      try {
-        return JSON.parse(localStorage.getItem(AI_SETTINGS_KEY) || "{}");
-      } catch (error) {
-        return {};
-      }
-    }
-
-    function getAiSettings() {
-      return loadAiSettings();
-    }
-
-    function applyAiSettingsToForm() {
-      const settings = getAiSettings();
-      els.apiKey.value = settings.apiKey || "";
-      els.chartModel.value = settings.chartModel || "gpt-5-mini";
-      els.newsModel.value = settings.newsModel || "gpt-5-mini";
-      els.apiBase.value = settings.apiBase || "https://api.openai.com/v1";
-
-      if (settings.apiKey) {
-        setStatus(els.aiConfigStatus, "ready", "AI configured");
-        els.aiConfigNote.textContent = "Chart and news tools are ready in this browser. For public hosting, move the requests behind your own backend.";
-      } else {
-        setStatus(els.aiConfigStatus, "wait", "AI not configured");
-        els.aiConfigNote.textContent = "Add your key to enable chart and fundamental analysis inside this workbook.";
-      }
-    }
-
-    function saveAiSettings(event) {
-      event.preventDefault();
-      const settings = {
-        apiKey: els.apiKey.value.trim(),
-        chartModel: els.chartModel.value.trim() || "gpt-5-mini",
-        newsModel: els.newsModel.value.trim() || "gpt-5-mini",
-        apiBase: (els.apiBase.value.trim() || "https://api.openai.com/v1").replace(/\/$/, "")
-      };
-
-      localStorage.setItem(AI_SETTINGS_KEY, JSON.stringify(settings));
-      applyAiSettingsToForm();
-    }
-
-    function clearAiSettings() {
-      localStorage.removeItem(AI_SETTINGS_KEY);
-      applyAiSettingsToForm();
-    }
-
-    function readFileAsDataUrl(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = () => reject(new Error("Unable to read the selected image."));
-        reader.readAsDataURL(file);
-      });
-    }
-
-    async function callOpenAI(payload) {
-      const settings = getAiSettings();
-      if (!settings.apiKey) {
-        throw new Error("Add your OpenAI API key in the AI Workspace section first.");
-      }
-
-      const endpoint = (settings.apiBase || "https://api.openai.com/v1").replace(/\/$/, "") + "/responses";
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": "Bearer " + settings.apiKey
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(data?.error?.message || "AI request failed.");
-      }
-
-      return data;
-    }
-
-    function collectOutputText(responseData) {
-      if (typeof responseData.output_text === "string" && responseData.output_text.trim()) {
-        return responseData.output_text.trim();
-      }
-
-      const parts = [];
-      (responseData.output || []).forEach((message) => {
-        (message.content || []).forEach((content) => {
-          if (typeof content.text === "string" && content.text.trim()) {
-            parts.push(content.text.trim());
-          }
-        });
-      });
-      return parts.join("\n").trim();
-    }
-
-    function collectAnnotations(responseData) {
-      const seen = new Set();
-      const annotations = [];
-
-      (responseData.output || []).forEach((message) => {
-        (message.content || []).forEach((content) => {
-          (content.annotations || []).forEach((annotation) => {
-            const url = annotation.url || annotation.target_url || "";
-            if (!url || seen.has(url)) return;
-            seen.add(url);
-            annotations.push({
-              url,
-              title: annotation.title || annotation.text || annotation.source_title || url
-            });
-          });
-        });
-      });
-
-      return annotations;
-    }
-
-    function signalClass(value) {
-      const text = String(value || "").toLowerCase();
-      if (text.includes("buy") || text.includes("bull")) return "signal-buy";
-      if (text.includes("sell") || text.includes("bear")) return "signal-sell";
-      if (text.includes("wait") || text.includes("neutral")) return "signal-wait";
-      return "signal-mixed";
-    }
-
-    function showCustomField() {
-      const isCustom = els.instrument.value === "custom";
-      els.contractWrap.hidden = !isCustom;
-      els.contract.disabled = !isCustom;
-      if (!isCustom) {
-        els.contract.value = "";
-      }
-    }
-
-    function updateSummary(total, wins, count, bestTrade) {
-      const average = count ? total / count : 0;
-      const winRate = count ? Math.round((wins / count) * 100) : 0;
-
-      els.total.textContent = formatSigned(total);
-      els.win.textContent = winRate + "%";
-      els.count.textContent = String(count);
-      els.best.textContent = count ? formatSigned(bestTrade) : "0.00";
-
-      els.heroTotal.textContent = formatSigned(total);
-      els.heroWin.textContent = winRate + "%";
-      els.heroCount.textContent = String(count);
-      els.heroAverage.textContent = formatSigned(average);
-
-      els.metricTotalCard.classList.toggle("metric-positive", total > 0);
-      els.metricTotalCard.classList.toggle("metric-negative", total < 0);
-      els.metricBestCard.classList.toggle("metric-positive", bestTrade > 0);
-      els.metricBestCard.classList.toggle("metric-negative", bestTrade < 0);
-
-      if (!count) {
-        els.reviewNote.textContent = "Start with your most recent completed trade. Add the chart view and the macro reason behind it, then your workbook begins to compound in value.";
-        return;
-      }
-
-      if (winRate >= 60 && total > 0) {
-        els.reviewNote.textContent = "Performance is healthy. Keep checking whether those results are coming from repeatable execution or one-off aggressive trades.";
-        return;
-      }
-
-      if (winRate < 45 && count >= 5) {
-        els.reviewNote.textContent = "The win rate is under pressure. Compare losing trades with the AI chart and news desk to see whether entries, timing, or macro context are being ignored.";
-        return;
-      }
-
-      els.reviewNote.textContent = "The record is balanced enough to study patterns. Review what your best and weakest trades share before changing strategy rules.";
-    }
-
-    function render() {
-      const sorted = [...trades].sort((a, b) => b.date.localeCompare(a.date));
-
-      if (!sorted.length) {
-        els.rows.innerHTML = '<tr><td colspan="9" class="empty">No trades logged yet. Add your first completed trade to start building a review history.</td></tr>';
-      } else {
-        els.rows.innerHTML = sorted.map((trade) => {
-          const marketClass = "pill-market pill-" + escapeHtml(trade.instrument);
-          const sideClass = trade.dir === "Long" ? "pill-long" : "pill-short";
-          const pnlClass = trade.pnl >= 0 ? "pnl pnl-pos mono" : "pnl pnl-neg mono";
-          return `
-            <tr>
-              <td class="mono">${escapeHtml(trade.date)}</td>
-              <td>
-                <div class="symbol-cell">
-                  <strong>${escapeHtml(trade.symbol)}</strong>
-                  <span class="subtle">${escapeHtml(trade.notes ? "Notes added" : "No notes")}</span>
-                </div>
-              </td>
-              <td><span class="${marketClass}">${escapeHtml(instrumentLabels[trade.instrument] || "Custom")}</span></td>
-              <td><span class="pill ${sideClass}">${escapeHtml(trade.dir)}</span></td>
-              <td class="mono">${formatNumber(trade.size)}</td>
-              <td class="mono">${formatNumber(trade.entry)}</td>
-              <td class="mono">${formatNumber(trade.exit)}</td>
-              <td class="${pnlClass}">${formatSigned(trade.pnl)}</td>
-              <td>
-                <div class="actions">
-                  <button class="btn btn-link" type="button" data-action="edit" data-id="${escapeHtml(trade.id)}">Edit</button>
-                  <button class="btn btn-link" type="button" data-action="delete" data-id="${escapeHtml(trade.id)}">Delete</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        }).join("");
-      }
-
-      const total = trades.reduce((sum, trade) => sum + trade.pnl, 0);
-      const wins = trades.filter((trade) => trade.pnl > 0).length;
-      const bestTrade = trades.length ? Math.max(...trades.map((trade) => trade.pnl)) : 0;
-
-      updateSummary(total, wins, trades.length, bestTrade);
-    }
-
-    function fillForm(trade) {
-      els.tradeId.value = trade.id;
-      els.date.value = trade.date;
-      els.symbol.value = trade.symbol;
-      els.instrument.value = trade.instrument;
-      els.dir.value = trade.dir;
-      els.size.value = trade.size;
-      els.contract.value = trade.contract || "";
-      els.entry.value = trade.entry;
-      els.exit.value = trade.exit;
-      els.notes.value = trade.notes || "";
-      showCustomField();
-
-      els.formTitle.textContent = "Edit Trade";
-      els.formSubtitle.textContent = "Update the entry so the workbook reflects the trade exactly as it was managed.";
-      els.saveButton.textContent = "Update Trade";
-      els.formPanel.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-
-    function resetForm() {
-      els.form.reset();
-      els.tradeId.value = "";
-      els.date.value = todayValue();
-      els.instrument.value = "forex";
-      els.dir.value = "Long";
-      els.size.value = "1";
-      els.contract.value = "";
-      els.formTitle.textContent = "Add Trade";
-      els.formSubtitle.textContent = "Log the position details immediately after execution so your post-trade review stays accurate.";
-      els.saveButton.textContent = "Save Trade";
-      showCustomField();
-    }
-
-    function removeTrade(id) {
-      const trade = trades.find((item) => item.id === id);
-      if (!trade) return;
-
-      const approved = confirm("Delete the journal entry for " + trade.symbol + " on " + trade.date + "?");
-      if (!approved) return;
-
-      trades = trades.filter((item) => item.id !== id);
-      saveTrades();
-      render();
-
-      if (els.tradeId.value === id) {
-        resetForm();
-      }
-    }
-
-    function renderChartAnalysis(result, symbol, timeframe) {
-      const confidence = Number(result.confidence) || 0;
-      const signalStyle = signalClass(result.signal);
-
-      els.chartResult.className = "";
-      els.chartResult.innerHTML = `
-        <div class="result-header">
-          <div class="result-title">
-            <strong>${escapeHtml(symbol)} ${escapeHtml(timeframe)} chart read</strong>
-            <div class="result-meta">Scenario-based signal for workbook review only.</div>
-          </div>
-          <div class="pill ${signalStyle}">${escapeHtml(result.signal)} | ${Math.round(confidence)}% confidence</div>
-        </div>
-        <div class="result-grid">
-          <div class="result-card"><h4>Market Bias</h4><p>${escapeHtml(result.market_bias)}</p></div>
-          <div class="result-card"><h4>Setup Summary</h4><p>${escapeHtml(result.setup_summary)}</p></div>
-          <div class="result-card"><h4>Entry Zone</h4><p>${escapeHtml(result.entry_zone)}</p></div>
-          <div class="result-card"><h4>Invalidation</h4><p>${escapeHtml(result.invalidation)}</p></div>
-          <div class="result-card"><h4>Targets</h4>${listMarkup(result.targets)}</div>
-          <div class="result-card"><h4>Confluences</h4>${listMarkup(result.confluences)}</div>
-          <div class="result-card"><h4>Risk Notes</h4>${listMarkup(result.risk_notes)}</div>
-          <div class="result-card"><h4>Execution Checklist</h4>${listMarkup(result.execution_checklist)}</div>
-          <div class="result-card full"><h4>Journal Prompt</h4><p>${escapeHtml(result.journal_prompt)}</p></div>
-        </div>
-      `;
-    }
-
-    function renderNewsAnalysis(result, symbol, citations) {
-      const confidence = Number(result.confidence) || 0;
-      const macroClass = signalClass(result.macro_bias);
-
-      els.newsResult.className = "";
-      els.newsResult.innerHTML = `
-        <div class="result-header">
-          <div class="result-title">
-            <strong>${escapeHtml(symbol)} fundamental view</strong>
-            <div class="result-meta">Live AI research summary based on recent web results.</div>
-          </div>
-          <div class="pill ${macroClass}">${escapeHtml(result.macro_bias)} | ${Math.round(confidence)}% confidence</div>
-        </div>
-        <div class="result-grid">
-          <div class="result-card full"><h4>Summary</h4><p>${escapeHtml(result.summary)}</p></div>
-          <div class="result-card"><h4>Bullish Case</h4><p>${escapeHtml(result.bullish_case)}</p></div>
-          <div class="result-card"><h4>Bearish Case</h4><p>${escapeHtml(result.bearish_case)}</p></div>
-          <div class="result-card"><h4>Key Catalysts</h4>${listMarkup(result.key_catalysts)}</div>
-          <div class="result-card"><h4>Risk Watch</h4>${listMarkup(result.risk_watch)}</div>
-          <div class="result-card full"><h4>Next Actions</h4>${listMarkup(result.next_actions)}</div>
-          <div class="result-card full"><h4>Workbook Prompt</h4><p>${escapeHtml(result.workbook_prompt)}</p></div>
-        </div>
-      `;
-
-      if (!citations.length) {
-        els.newsSources.innerHTML = "";
-        return;
-      }
-
-      els.newsSources.innerHTML = `
-        <div class="citation-list">
-          ${citations.map((citation) => `
-            <div class="citation-item">
-              <a href="${escapeHtml(citation.url)}" target="_blank" rel="noreferrer">${escapeHtml(citation.title)}</a><br />
-              ${escapeHtml(citation.url)}
-            </div>
-          `).join("")}
-        </div>
-      `;
-    }
-
-    function resetChartDesk() {
-      els.chartForm.reset();
-      els.chartPreview.innerHTML = "Upload a screenshot to review structure, momentum, and trade conditions.";
-      els.chartResult.className = "result-empty";
-      els.chartResult.textContent = "No chart analysis yet.";
-      setStatus(els.chartStatus, "wait", "Awaiting screenshot");
-      els.chartStatusNote.textContent = "The AI will give a conditional signal such as buy setup, sell setup, or wait, plus the reasoning behind it.";
-    }
-
-    function resetNewsDesk() {
-      els.newsForm.reset();
-      els.newsHorizon.value = "Intraday";
-      els.newsResult.className = "result-empty";
-      els.newsResult.textContent = "No fundamental analysis yet.";
-      els.newsSources.innerHTML = "";
-      setStatus(els.newsStatus, "wait", "Awaiting query");
-      els.newsStatusNote.textContent = "This uses web-enabled AI research, so results depend on live news coverage and your API access.";
-    }
-
-    function updateChartPreview() {
-      const file = els.chartImage.files[0];
-      if (!file) {
-        els.chartPreview.textContent = "Upload a screenshot to review structure, momentum, and trade conditions.";
-        return;
-      }
-
-      const objectUrl = URL.createObjectURL(file);
-      els.chartPreview.innerHTML = `<img alt="Chart preview" src="${objectUrl}" />`;
-    }
-
-    async function analyzeChart(event) {
-      event.preventDefault();
-      const file = els.chartImage.files[0];
-      if (!file) {
-        setStatus(els.chartStatus, "error", "Screenshot required");
-        els.chartStatusNote.textContent = "Add a chart image before running the chart desk.";
-        return;
-      }
-
-      setStatus(els.chartStatus, "wait", "Analyzing chart");
-      els.chartStatusNote.textContent = "Sending your screenshot to the model for a structured chart read.";
-
-      try {
-        const imageDataUrl = await readFileAsDataUrl(file);
-        const settings = getAiSettings();
-        const payload = {
-          model: settings.chartModel || "gpt-5-mini",
-          reasoning: { effort: "low" },
-          text: {
-            format: {
-              type: "json_schema",
-              name: "chart_signal_report",
-              strict: true,
-              schema: chartSchema
-            }
-          },
-          input: [
-            {
-              role: "system",
-              content: [
-                {
-                  type: "input_text",
-                  text: "You are a disciplined trading workbook assistant. Analyze chart screenshots and return a conditional, educational market read. Do not promise outcomes. The signal must be one of: Buy Setup, Sell Setup, Wait, or No Clear Edge."
-                }
-              ]
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "input_text",
-                  text: "Analyze this chart screenshot for " + els.chartSymbol.value.trim().toUpperCase() + " on the " + els.chartTimeframe.value.trim() + " timeframe. Trader context: " + (els.chartNotes.value.trim() || "None provided.") + " Focus on trend, structure, momentum, support/resistance, liquidity context, and whether the setup is tradable now or should be left alone."
-                },
-                {
-                  type: "input_image",
-                  image_url: imageDataUrl
-                }
-              ]
-            }
-          ]
-        };
-
-        const responseData = await callOpenAI(payload);
-        const parsed = JSON.parse(collectOutputText(responseData));
-        renderChartAnalysis(parsed, els.chartSymbol.value.trim().toUpperCase(), els.chartTimeframe.value.trim());
-        setStatus(els.chartStatus, "ready", "Chart analysis ready");
-        els.chartStatusNote.textContent = "Use the output as a second opinion and workbook prompt, not as guaranteed financial advice.";
-      } catch (error) {
-        setStatus(els.chartStatus, "error", "Chart analysis failed");
-        els.chartStatusNote.textContent = error.message;
-        els.chartResult.className = "result-empty";
-        els.chartResult.textContent = "Unable to generate chart analysis right now.";
-      }
-    }
-
-    async function analyzeNews(event) {
-      event.preventDefault();
-      const symbol = els.newsSymbol.value.trim().toUpperCase();
-      if (!symbol) {
-        setStatus(els.newsStatus, "error", "Asset required");
-        els.newsStatusNote.textContent = "Add a symbol or asset before running the news desk.";
-        return;
-      }
-
-      setStatus(els.newsStatus, "wait", "Researching news");
-      els.newsStatusNote.textContent = "Running a live web search for macro and market catalysts tied to " + symbol + ".";
-
-      try {
-        const settings = getAiSettings();
-        const payload = {
-          model: settings.newsModel || "gpt-5-mini",
-          reasoning: { effort: "low" },
-          tools: [{ type: "web_search" }],
-          text: {
-            format: {
-              type: "json_schema",
-              name: "fundamental_news_report",
-              strict: true,
-              schema: newsSchema
-            }
-          },
-          input: [
-            {
-              role: "system",
-              content: [
-                {
-                  type: "input_text",
-                  text: "You are a macro and fundamental trading analyst. Use web search to gather recent market news, macro catalysts, policy signals, and risk sentiment relevant to the requested asset. Return concise trader-focused analysis with balanced bullish and bearish cases."
-                }
-              ]
-            },
-            {
-              role: "user",
-              content: [
-                {
-                  type: "input_text",
-                  text: "Analyze the latest fundamental news for " + symbol + ". Trading horizon: " + els.newsHorizon.value + ". Focus: " + (els.newsFocus.value.trim() || "all major current catalysts") + ". Extra notes: " + (els.newsNotes.value.trim() || "None.") + " Build the output for a personal trading workbook."
-                }
-              ]
-            }
-          ]
-        };
-
-        const responseData = await callOpenAI(payload);
-        const parsed = JSON.parse(collectOutputText(responseData));
-        const citations = collectAnnotations(responseData);
-        renderNewsAnalysis(parsed, symbol, citations);
-        setStatus(els.newsStatus, "ready", "Fundamental analysis ready");
-        els.newsStatusNote.textContent = "Treat the result as a research assistant summary and still verify major releases that affect your risk.";
-      } catch (error) {
-        setStatus(els.newsStatus, "error", "News analysis failed");
-        els.newsStatusNote.textContent = error.message;
-        els.newsResult.className = "result-empty";
-        els.newsResult.textContent = "Unable to generate fundamental analysis right now.";
-        els.newsSources.innerHTML = "";
-      }
-    }
-
-    els.form.addEventListener("submit", (event) => {
-      event.preventDefault();
-
-      const trade = {
-        id: els.tradeId.value || uid(),
-        date: els.date.value,
-        symbol: els.symbol.value.trim().toUpperCase(),
-        instrument: els.instrument.value,
-        dir: els.dir.value,
-        size: Number(els.size.value) || 1,
-        contract: els.instrument.value === "custom" ? Number(els.contract.value) || "" : "",
-        entry: Number(els.entry.value),
-        exit: Number(els.exit.value),
-        notes: els.notes.value.trim()
-      };
-
-      trade.pnl = calculatePnl(trade);
-
-      const existingIndex = trades.findIndex((item) => item.id === trade.id);
-      if (existingIndex >= 0) {
-        trades[existingIndex] = trade;
-      } else {
-        trades.push(trade);
-      }
-
-      saveTrades();
-      render();
-      resetForm();
-    });
-
-    els.rows.addEventListener("click", (event) => {
-      const button = event.target.closest("button[data-action]");
-      if (!button) return;
-
-      const { action, id } = button.dataset;
-      if (!id) return;
-
-      if (action === "edit") {
-        const trade = trades.find((item) => item.id === id);
-        if (trade) {
-          fillForm(trade);
-        }
-      }
-
-      if (action === "delete") {
-        removeTrade(id);
-      }
-    });
-
-    els.clearAll.addEventListener("click", () => {
-      if (!trades.length) return;
-
-      const approved = confirm("Clear all trades from this browser workbook?");
-      if (!approved) return;
-
-      trades = [];
-      saveTrades();
-      render();
-      resetForm();
-    });
-
-    els.instrument.addEventListener("change", showCustomField);
-    els.resetForm.addEventListener("click", resetForm);
-    els.aiConfigForm.addEventListener("submit", saveAiSettings);
-    els.clearAiSettings.addEventListener("click", clearAiSettings);
-    els.chartForm.addEventListener("submit", analyzeChart);
-    els.newsForm.addEventListener("submit", analyzeNews);
-    els.resetChart.addEventListener("click", resetChartDesk);
-    els.resetNews.addEventListener("click", resetNewsDesk);
-    els.chartImage.addEventListener("change", updateChartPreview);
-
-    applyAiSettingsToForm();
-    resetForm();
-    resetChartDesk();
-    resetNewsDesk();
-    render();
-  </script>
+  <script src="./app.js"></script>
 </body>
 </html>
