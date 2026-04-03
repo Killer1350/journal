@@ -338,20 +338,20 @@ function render() {
       const pnlClass = trade.pnl >= 0 ? "pnl pnl-pos mono" : "pnl pnl-neg mono";
       return `
         <tr>
-          <td class="mono">${escapeHtml(trade.date)}</td>
-          <td>
+          <td class="mono" data-label="Date">${escapeHtml(trade.date)}</td>
+          <td data-label="Symbol">
             <div class="symbol-cell">
               <strong>${escapeHtml(trade.symbol)}</strong>
               <span class="subtle">${escapeHtml(trade.notes ? "Notes added" : "No notes")}</span>
             </div>
           </td>
-          <td><span class="${marketClass}">${escapeHtml(instrumentLabels[trade.instrument] || "Custom")}</span></td>
-          <td><span class="pill ${sideClass}">${escapeHtml(trade.dir)}</span></td>
-          <td class="mono">${formatNumber(trade.size)}</td>
-          <td class="mono">${formatNumber(trade.entry)}</td>
-          <td class="mono">${formatNumber(trade.exit)}</td>
-          <td class="${pnlClass}">${formatSigned(trade.pnl)}</td>
-          <td>
+          <td data-label="Market"><span class="${marketClass}">${escapeHtml(instrumentLabels[trade.instrument] || "Custom")}</span></td>
+          <td data-label="Side"><span class="pill ${sideClass}">${escapeHtml(trade.dir)}</span></td>
+          <td class="mono" data-label="Size">${formatNumber(trade.size)}</td>
+          <td class="mono" data-label="Entry">${formatNumber(trade.entry)}</td>
+          <td class="mono" data-label="Exit">${formatNumber(trade.exit)}</td>
+          <td class="${pnlClass}" data-label="P&L">${formatSigned(trade.pnl)}</td>
+          <td data-label="Actions">
             <div class="actions">
               <button class="btn btn-link" type="button" data-action="edit" data-id="${escapeHtml(trade.id)}">Edit</button>
               <button class="btn btn-link" type="button" data-action="delete" data-id="${escapeHtml(trade.id)}">Delete</button>

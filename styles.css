@@ -433,6 +433,9 @@ textarea {
 
 .btn {
   appearance: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: none;
   border-radius: 12px;
   padding: 11px 14px;
@@ -863,12 +866,19 @@ textarea {
   .sidebar {
     position: static;
     height: auto;
-    padding-bottom: 90px;
+    margin: 20px 20px 0;
+    padding: 24px;
+    border-radius: 26px;
+    box-shadow: var(--shadow-strong);
   }
 
   .sidebar-foot {
     position: static;
     margin-top: 26px;
+  }
+
+  .main {
+    padding-top: 20px;
   }
 }
 
@@ -878,15 +888,53 @@ textarea {
   .signal-grid {
     grid-template-columns: 1fr;
   }
+
+  .main-grid,
+  .signal-grid {
+    gap: 18px;
+  }
 }
 
 @media (max-width: 760px) {
-  .main {
-    padding: 16px;
+  .sidebar {
+    margin: 12px 12px 0;
+    padding: 18px;
+    border-radius: 22px;
   }
 
-  .sidebar {
-    padding: 20px 16px;
+  .brand {
+    margin-bottom: 0;
+  }
+
+  .brand-title {
+    font-size: 1rem;
+  }
+
+  .brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 16px;
+  }
+
+  .sidebar-block {
+    margin-top: 0;
+  }
+
+  .sidebar-block + .sidebar-block {
+    margin-top: 0;
+  }
+
+  .sidebar > .sidebar-block:not(:nth-last-child(2)),
+  .sidebar-foot {
+    display: none;
+  }
+
+  .sidebar-card.compact {
+    margin-top: 0;
+  }
+
+  .main {
+    padding: 12px;
   }
 
   .hero,
@@ -894,8 +942,51 @@ textarea {
     padding: 18px;
   }
 
+  .hero {
+    gap: 16px;
+    border-radius: 22px;
+  }
+
+  .hero h1 {
+    max-width: none;
+    font-size: clamp(1.95rem, 10vw, 2.7rem);
+    line-height: 1.02;
+  }
+
+  .hero p,
+  .panel-copy {
+    font-size: 14px;
+    line-height: 1.7;
+  }
+
   .hero-metrics,
-  .metrics,
+  .metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .hero-metric,
+  .metric-card,
+  .signal-card,
+  .result-card {
+    padding: 14px;
+    border-radius: 16px;
+  }
+
+  .hero-metric strong,
+  .metric-card strong {
+    font-size: 1.3rem;
+  }
+
+  .main-grid,
+  .signal-grid {
+    gap: 16px;
+    margin-top: 16px;
+  }
+
+  .signalpro-shell {
+    margin-top: 16px;
+  }
+
   .signal-overview,
   .result-grid,
   .form-grid {
@@ -904,11 +995,182 @@ textarea {
 
   .panel-head {
     flex-direction: column;
+    align-items: stretch;
+    margin-bottom: 16px;
+  }
+
+  .panel-head .btn-danger,
+  .form-actions .btn,
+  .actions .btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-actions {
+    flex-direction: column;
   }
 
   .actions,
   .form-actions,
   .status-row {
+    align-items: stretch;
+  }
+
+  .table-wrap {
+    overflow: visible;
+    border: none;
+    background: transparent;
+  }
+
+  table,
+  thead,
+  tbody,
+  tr,
+  td {
+    display: block;
+    width: 100%;
+  }
+
+  table {
+    min-width: 0;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  tbody tr {
+    display: grid;
+    gap: 10px;
+    padding: 16px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid var(--line);
+    box-shadow: 0 12px 28px rgba(20, 35, 56, 0.08);
+  }
+
+  tbody tr:hover {
+    background: rgba(255, 255, 255, 0.96);
+  }
+
+  td {
+    display: flex;
     align-items: flex-start;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 0;
+    border-bottom: none;
+    text-align: right;
+  }
+
+  td::before {
+    content: attr(data-label);
+    flex: 0 0 42%;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  td > * {
+    margin-left: auto;
+  }
+
+  .symbol-cell {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .actions {
+    justify-content: flex-end;
+  }
+
+  td.empty {
+    display: block;
+    padding: 28px 18px;
+    text-align: center;
+    border: 1px dashed var(--line-strong);
+    border-radius: 18px;
+    background: var(--panel);
+  }
+
+  td.empty::before {
+    content: none;
+  }
+
+  .preview-box {
+    min-height: 180px;
+    padding: 18px;
+  }
+
+  .result-shell,
+  .copilot-box {
+    padding: 16px;
+  }
+
+  .copilot-box {
+    min-height: 220px;
+  }
+
+  .stream-shell {
+    max-height: 560px;
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 560px) {
+  .sidebar {
+    padding: 16px;
+  }
+
+  .hero,
+  .panel {
+    padding: 16px;
+  }
+
+  .hero-metrics,
+  .metrics {
+    grid-template-columns: 1fr;
+  }
+
+  .brand {
+    gap: 12px;
+  }
+
+  .brand-mark {
+    width: 38px;
+    height: 38px;
+    font-size: 13px;
+  }
+
+  td {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    text-align: left;
+  }
+
+  td::before {
+    flex: 0 0 auto;
+  }
+
+  td > * {
+    margin-left: 0;
+  }
+
+  .symbol-cell {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .actions {
+    width: 100%;
   }
 }
