@@ -366,6 +366,49 @@ tbody tr:last-child td {
   color: var(--muted);
 }
 
+.field-note {
+  font-size: 12px;
+  line-height: 1.65;
+  color: var(--muted);
+}
+
+.trade-shot {
+  min-height: 200px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px dashed var(--line-strong);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(244, 247, 251, 0.92));
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  text-align: center;
+  line-height: 1.7;
+  color: var(--muted);
+}
+
+.trade-shot.has-image {
+  padding: 0;
+  border-style: solid;
+  background: #0c1729;
+}
+
+.trade-shot img {
+  width: 100%;
+  max-height: 300px;
+  display: block;
+  object-fit: contain;
+  background: #0c1729;
+}
+
+.trade-shot-meta {
+  margin-top: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .mono {
   font-variant-numeric: tabular-nums;
 }
@@ -824,6 +867,7 @@ textarea {
 
 .pill-forex { background: #e2f0ff; color: #1f4d7a; }
 .pill-gold { background: #fff2d3; color: #8a6114; }
+.pill-silver { background: #edf2f6; color: #516172; }
 .pill-indices { background: #ebe7ff; color: #4c3c8b; }
 .pill-crypto { background: #e7fcf2; color: #166445; }
 .pill-custom { background: #edf0f4; color: #4e596a; }
@@ -1014,6 +1058,22 @@ textarea {
   .form-actions,
   .status-row {
     align-items: stretch;
+  }
+
+  .trade-shot {
+    min-height: 170px;
+  }
+
+  .trade-shot img {
+    max-height: 240px;
+  }
+
+  .trade-shot-meta {
+    align-items: stretch;
+  }
+
+  .trade-shot-meta .btn {
+    width: 100%;
   }
 
   .table-wrap {

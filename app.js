@@ -3,6 +3,8 @@ const numberFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
 });
+const TRADE_IMAGE_MAX_EDGE = 1400;
+const TRADE_IMAGE_QUALITY = 0.82;
 
 const serverModels = {
   chart: "gpt-5-mini",
@@ -13,6 +15,7 @@ const serverModels = {
 const instrumentLabels = {
   forex: "Forex",
   gold: "Gold",
+  silver: "Silver",
   indices: "Indices",
   crypto: "Crypto",
   custom: "Custom"
@@ -117,6 +120,10 @@ const els = {
   entry: document.getElementById("entry"),
   exit: document.getElementById("exit"),
   notes: document.getElementById("notes"),
+  tradeImage: document.getElementById("tradeImage"),
+  tradeImagePreview: document.getElementById("tradeImagePreview"),
+  tradeImageMeta: document.getElementById("tradeImageMeta"),
+  removeTradeImage: document.getElementById("removeTradeImage"),
   resetForm: document.getElementById("resetForm"),
   saveButton: document.getElementById("saveButton"),
   total: document.getElementById("total"),
@@ -165,6 +172,8 @@ const els = {
 
 let trades = loadTrades();
 let previewUrl = "";
+let tradeImageData = "";
+let tradeImageLoadPromise = Promise.resolve();
 
 function loadTrades() {
   const saved = JSON.parse(localStorage.getItem(JOURNAL_KEY) || "[]");
@@ -182,7 +191,8 @@ function normalizeTrade(raw) {
     contract: Number(raw.contract) || "",
     entry: Number(raw.entry) || 0,
     exit: Number(raw.exit) || 0,
-    notes: raw.notes || ""
+    notes: raw.notes || "",
+    image: typeof raw.image === "string" ? raw.image : ""
   };
 
   const storedPnl = Number(raw.pnl);
@@ -217,14 +227,21 @@ function calculatePnl(trade) {
   }
 
   if (trade.instrument === "gold") return roundToCents(diff * size * 100);
+  if (trade.instrument === "silver") return roundToCents(diff * size * 5000);
   if (trade.instrument === "indices" || trade.instrument === "crypto") return roundToCents(diff * size);
 
   const contract = Number(trade.contract) || 1;
   return roundToCents(diff * size * contract);
 }
 
-function saveTrades() {
-  localStorage.setItem(JOURNAL_KEY, JSON.stringify(trades));
+function saveTrades(nextTrades = trades) {
+  try {
+    localStorage.setItem(JOURNAL_KEY, JSON.stringify(nextTrades));
+    return true;
+  } catch (error) {
+    alert("This browser workbook ran out of storage. Remove some saved trade screenshots or use smaller images.");
+    return false;
+  }
 }
 
 function escapeHtml(value) {
@@ -248,6 +265,101 @@ function formatSigned(value) {
   const numeric = Number(value) || 0;
   if (numeric === 0) return "0.00";
   return (numeric > 0 ? "+" : "-") + formatNumber(Math.abs(numeric));
+}
+
+function tradeMetaLine(trade) {
+  const items = [trade.notes ? "Notes added" : "No notes"];
+  if (trade.image) items.push("Chart attached");
+  return items.join(" • ");
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Could not read that trade screenshot."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(source) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("Could not process that trade screenshot."));
+    image.src = source;
+  });
+}
+
+async function compressTradeImage(file) {
+  const source = await readFileAsDataUrl(file);
+  const image = await loadImage(source);
+  const naturalWidth = image.naturalWidth || image.width || 1;
+  const naturalHeight = image.naturalHeight || image.height || 1;
+  const scale = Math.min(1, TRADE_IMAGE_MAX_EDGE / Math.max(naturalWidth, naturalHeight));
+  const width = Math.max(1, Math.round(naturalWidth * scale));
+  const height = Math.max(1, Math.round(naturalHeight * scale));
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) return source;
+
+  canvas.width = width;
+  canvas.height = height;
+  context.drawImage(image, 0, 0, width, height);
+  return canvas.toDataURL("image/jpeg", TRADE_IMAGE_QUALITY);
+}
+
+function renderTradeImagePreview(imageData) {
+  if (!els.tradeImagePreview || !els.tradeImageMeta || !els.removeTradeImage) return;
+
+  if (!imageData) {
+    els.tradeImagePreview.classList.remove("has-image");
+    els.tradeImagePreview.innerHTML = "No trade screenshot attached yet.";
+    els.tradeImageMeta.textContent = "Attach a screenshot to keep the visual setup alongside your notes.";
+    els.removeTradeImage.disabled = true;
+    return;
+  }
+
+  els.tradeImagePreview.classList.add("has-image");
+  els.tradeImagePreview.innerHTML = `<img alt="Trade screenshot preview" src="${imageData}" />`;
+  els.tradeImageMeta.textContent = "Screenshot attached to this trade entry. Edit the trade any time to replace or remove it.";
+  els.removeTradeImage.disabled = false;
+}
+
+async function handleTradeImageChange() {
+  const file = els.tradeImage.files && els.tradeImage.files[0];
+  if (!file) {
+    renderTradeImagePreview(tradeImageData);
+    return;
+  }
+
+  if (!String(file.type || "").startsWith("image/")) {
+    alert("Please choose an image file for the trade screenshot.");
+    els.tradeImage.value = "";
+    renderTradeImagePreview(tradeImageData);
+    return;
+  }
+
+  tradeImageLoadPromise = compressTradeImage(file)
+    .then((imageData) => {
+      tradeImageData = imageData;
+      renderTradeImagePreview(tradeImageData);
+    })
+    .catch((error) => {
+      els.tradeImage.value = "";
+      renderTradeImagePreview(tradeImageData);
+      alert(error.message || "Could not load that trade screenshot.");
+    });
+
+  await tradeImageLoadPromise;
+}
+
+function clearTradeImage() {
+  tradeImageData = "";
+  tradeImageLoadPromise = Promise.resolve();
+  els.tradeImage.value = "";
+  renderTradeImagePreview("");
 }
 
 function listMarkup(items) {
@@ -336,13 +448,14 @@ function render() {
       const marketClass = "pill pill-market pill-" + escapeHtml(trade.instrument);
       const sideClass = trade.dir === "Long" ? "pill-long" : "pill-short";
       const pnlClass = trade.pnl >= 0 ? "pnl pnl-pos mono" : "pnl pnl-neg mono";
+      const metaLine = tradeMetaLine(trade);
       return `
         <tr>
           <td class="mono" data-label="Date">${escapeHtml(trade.date)}</td>
           <td data-label="Symbol">
             <div class="symbol-cell">
               <strong>${escapeHtml(trade.symbol)}</strong>
-              <span class="subtle">${escapeHtml(trade.notes ? "Notes added" : "No notes")}</span>
+              <span class="subtle">${escapeHtml(metaLine)}</span>
             </div>
           </td>
           <td data-label="Market"><span class="${marketClass}">${escapeHtml(instrumentLabels[trade.instrument] || "Custom")}</span></td>
@@ -380,6 +493,10 @@ function fillForm(trade) {
   els.entry.value = trade.entry;
   els.exit.value = trade.exit;
   els.notes.value = trade.notes || "";
+  tradeImageData = trade.image || "";
+  tradeImageLoadPromise = Promise.resolve();
+  els.tradeImage.value = "";
+  renderTradeImagePreview(tradeImageData);
   showCustomField();
 
   els.formTitle.textContent = "Edit Trade";
@@ -396,6 +513,7 @@ function resetForm() {
   els.dir.value = "Long";
   els.size.value = "1";
   els.contract.value = "";
+  clearTradeImage();
   els.formTitle.textContent = "Add Trade";
   els.formSubtitle.textContent = "Log the position details immediately after execution so your review stays accurate.";
   els.saveButton.textContent = "Save Trade";
@@ -409,8 +527,10 @@ function removeTrade(id) {
   const approved = confirm("Delete the journal entry for " + trade.symbol + " on " + trade.date + "?");
   if (!approved) return;
 
-  trades = trades.filter((item) => item.id !== id);
-  saveTrades();
+  const nextTrades = trades.filter((item) => item.id !== id);
+  if (!saveTrades(nextTrades)) return;
+
+  trades = nextTrades;
   render();
 
   if (els.tradeId.value === id) {
@@ -957,8 +1077,9 @@ async function analyzeCopilot(event) {
   }
 }
 
-els.form.addEventListener("submit", (event) => {
+els.form.addEventListener("submit", async (event) => {
   event.preventDefault();
+  await tradeImageLoadPromise;
 
   const trade = {
     id: els.tradeId.value || uid(),
@@ -970,19 +1091,23 @@ els.form.addEventListener("submit", (event) => {
     contract: els.instrument.value === "custom" ? Number(els.contract.value) || "" : "",
     entry: Number(els.entry.value),
     exit: Number(els.exit.value),
-    notes: els.notes.value.trim()
+    notes: els.notes.value.trim(),
+    image: tradeImageData
   };
 
   trade.pnl = calculatePnl(trade);
 
+  const nextTrades = [...trades];
   const existingIndex = trades.findIndex((item) => item.id === trade.id);
   if (existingIndex >= 0) {
-    trades[existingIndex] = trade;
+    nextTrades[existingIndex] = trade;
   } else {
-    trades.push(trade);
+    nextTrades.push(trade);
   }
 
-  saveTrades();
+  if (!saveTrades(nextTrades)) return;
+
+  trades = nextTrades;
   render();
   resetForm();
 });
@@ -1005,13 +1130,18 @@ els.rows.addEventListener("click", (event) => {
 els.clearAll.addEventListener("click", () => {
   if (!trades.length) return;
   if (!confirm("Clear all trades from this browser workbook?")) return;
-  trades = [];
-  saveTrades();
+
+  const nextTrades = [];
+  if (!saveTrades(nextTrades)) return;
+
+  trades = nextTrades;
   render();
   resetForm();
 });
 
 els.instrument.addEventListener("change", showCustomField);
+els.tradeImage.addEventListener("change", handleTradeImageChange);
+els.removeTradeImage.addEventListener("click", clearTradeImage);
 els.resetForm.addEventListener("click", resetForm);
 els.chartForm.addEventListener("submit", analyzeChart);
 els.resetChart.addEventListener("click", resetChartDesk);

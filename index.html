@@ -148,6 +148,7 @@
                 <select id="instrument">
                   <option value="forex">Forex</option>
                   <option value="gold">Gold (XAUUSD)</option>
+                  <option value="silver">Silver (XAGUSD)</option>
                   <option value="indices">Indices</option>
                   <option value="crypto">Crypto</option>
                   <option value="custom">Custom</option>
@@ -182,6 +183,24 @@
               <div class="field field-full">
                 <label for="notes">Notes</label>
                 <textarea id="notes" placeholder="Setup quality, execution notes, emotions, mistakes, or what you want to review later."></textarea>
+              </div>
+
+              <div class="field field-full">
+                <label for="tradeImage">Trade Screenshot</label>
+                <input id="tradeImage" type="file" accept="image/*" />
+                <div class="field-note">
+                  Optional. Save the chart or execution screenshot with this trade entry. Large phone screenshots are compressed automatically for browser storage.
+                </div>
+              </div>
+
+              <div class="field field-full">
+                <div class="trade-shot" id="tradeImagePreview">No trade screenshot attached yet.</div>
+                <div class="trade-shot-meta">
+                  <div class="field-note" id="tradeImageMeta">
+                    Attach a screenshot to keep the visual setup alongside your notes.
+                  </div>
+                  <button class="btn btn-secondary" type="button" id="removeTradeImage" disabled>Remove Image</button>
+                </div>
               </div>
 
               <div class="form-actions field-full">
