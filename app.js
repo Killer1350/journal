@@ -126,7 +126,16 @@ const els = {
   contractWrap: document.getElementById("contractWrap"),
   entry: document.getElementById("entry"),
   exit: document.getElementById("exit"),
+  stopLoss: document.getElementById("stopLoss"),
+  takeProfit: document.getElementById("takeProfit"),
   notes: document.getElementById("notes"),
+  rrCard: document.getElementById("rrCard"),
+  rrStatusBadge: document.getElementById("rrStatusBadge"),
+  rrSummary: document.getElementById("rrSummary"),
+  rrRiskValue: document.getElementById("rrRiskValue"),
+  rrRewardValue: document.getElementById("rrRewardValue"),
+  rrDistanceValue: document.getElementById("rrDistanceValue"),
+  rrRatioValue: document.getElementById("rrRatioValue"),
   tradeImage: document.getElementById("tradeImage"),
   tradeImagePreview: document.getElementById("tradeImagePreview"),
   tradeImageMeta: document.getElementById("tradeImageMeta"),
@@ -210,9 +219,11 @@ function normalizeTrade(raw) {
     instrument: raw.instrument || "forex",
     dir: raw.dir === "Short" ? "Short" : "Long",
     size: Number(raw.size) || 1,
-    contract: Number(raw.contract) || "",
+    contract: normalizeOptionalNumber(raw.contract),
     entry: Number(raw.entry) || 0,
     exit: Number(raw.exit) || 0,
+    stopLoss: normalizeOptionalNumber(raw.stopLoss),
+    takeProfit: normalizeOptionalNumber(raw.takeProfit),
     notes: raw.notes || "",
     image: typeof raw.image === "string" ? raw.image : ""
   };
@@ -232,6 +243,17 @@ function todayValue() {
 
 function roundToCents(value) {
   return Number(value.toFixed(2));
+}
+
+function normalizeOptionalNumber(value) {
+  if (value === "" || value === null || value === undefined) return "";
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? numeric : "";
+}
+
+function readOptionalNumber(value) {
+  const normalized = normalizeOptionalNumber(value);
+  return normalized === "" ? null : normalized;
 }
 
 function calculatePnl(trade) {
@@ -289,9 +311,167 @@ function formatSigned(value) {
   return (numeric > 0 ? "+" : "-") + formatNumber(Math.abs(numeric));
 }
 
+function formatPriceValue(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return "0.0000";
+  return numeric.toLocaleString("en-US", {
+    minimumFractionDigits: 4,
+    maximumFractionDigits: 4
+  });
+}
+
+function buildTradeSnapshot(overrides = {}) {
+  return {
+    symbol: String(overrides.symbol ?? els.symbol.value ?? "").trim().toUpperCase(),
+    instrument: overrides.instrument ?? els.instrument.value,
+    dir: overrides.dir ?? els.dir.value,
+    size:
+      overrides.size ??
+      (readOptionalNumber(els.size.value) ?? 1),
+    contract:
+      overrides.contract ??
+      (els.instrument.value === "custom"
+        ? readOptionalNumber(els.contract.value) ?? ""
+        : ""),
+    entry:
+      overrides.entry ??
+      (readOptionalNumber(els.entry.value) ?? 0),
+    exit:
+      overrides.exit ??
+      (readOptionalNumber(els.exit.value) ?? 0)
+  };
+}
+
+function getRiskRewardMetrics(trade) {
+  const entry = readOptionalNumber(trade.entry);
+  const stopLoss = readOptionalNumber(trade.stopLoss);
+  const takeProfit = readOptionalNumber(trade.takeProfit);
+  const direction = trade.dir === "Short" ? "Short" : "Long";
+
+  if (entry === null || stopLoss === null || takeProfit === null) {
+    return {
+      state: "wait",
+      message: "Add entry, stop loss, and take profit to calculate the setup."
+    };
+  }
+
+  const riskDistance =
+    direction === "Long" ? entry - stopLoss : stopLoss - entry;
+  const rewardDistance =
+    direction === "Long" ? takeProfit - entry : entry - takeProfit;
+
+  if (riskDistance <= 0 || rewardDistance <= 0) {
+    const message =
+      direction === "Long"
+        ? "For a long setup, stop loss should be below entry and take profit should be above entry."
+        : "For a short setup, stop loss should be above entry and take profit should be below entry.";
+
+    return {
+      state: "error",
+      message,
+      riskDistance: Math.max(riskDistance, 0),
+      rewardDistance: Math.max(rewardDistance, 0)
+    };
+  }
+
+  const tradeBase = {
+    ...trade,
+    entry,
+    size: Number(trade.size) || 1
+  };
+  const riskPnl = Math.abs(
+    calculatePnl({
+      ...tradeBase,
+      exit: stopLoss
+    })
+  );
+  const rewardPnl = Math.abs(
+    calculatePnl({
+      ...tradeBase,
+      exit: takeProfit
+    })
+  );
+  const ratio = rewardDistance / riskDistance;
+
+  return {
+    state: "ready",
+    riskDistance,
+    rewardDistance,
+    riskPnl,
+    rewardPnl,
+    ratio,
+    message:
+      direction +
+      " setup looks valid. Risk is " +
+      formatSigned(-riskPnl) +
+      " to SL and reward is " +
+      formatSigned(rewardPnl) +
+      " to TP."
+  };
+}
+
+function updateRiskRewardCalculator(trade = buildTradeSnapshot()) {
+  if (
+    !els.rrStatusBadge ||
+    !els.rrSummary ||
+    !els.rrRiskValue ||
+    !els.rrRewardValue ||
+    !els.rrDistanceValue ||
+    !els.rrRatioValue
+  ) {
+    return;
+  }
+
+  const metrics = getRiskRewardMetrics({
+    ...trade,
+    stopLoss:
+      "stopLoss" in trade ? trade.stopLoss : readOptionalNumber(els.stopLoss.value),
+    takeProfit:
+      "takeProfit" in trade ? trade.takeProfit : readOptionalNumber(els.takeProfit.value)
+  });
+
+  els.rrStatusBadge.className = "rr-badge";
+
+  if (metrics.state === "ready") {
+    els.rrStatusBadge.classList.add("rr-badge-ready");
+    els.rrStatusBadge.textContent = "Plan Valid";
+    els.rrRiskValue.textContent = formatSigned(-metrics.riskPnl);
+    els.rrRewardValue.textContent = formatSigned(metrics.rewardPnl);
+    els.rrDistanceValue.textContent = formatPriceValue(metrics.riskDistance);
+    els.rrRatioValue.textContent = "1:" + metrics.ratio.toFixed(2);
+    els.rrSummary.textContent = metrics.message;
+    return;
+  }
+
+  if (metrics.state === "error") {
+    els.rrStatusBadge.classList.add("rr-badge-error");
+    els.rrStatusBadge.textContent = "Check Levels";
+    els.rrRiskValue.textContent = "0.00";
+    els.rrRewardValue.textContent = "0.00";
+    els.rrDistanceValue.textContent = formatPriceValue(metrics.riskDistance || 0);
+    els.rrRatioValue.textContent = "1:0.00";
+    els.rrSummary.textContent = metrics.message;
+    return;
+  }
+
+  els.rrStatusBadge.classList.add("rr-badge-wait");
+  els.rrStatusBadge.textContent = "Incomplete";
+  els.rrRiskValue.textContent = "0.00";
+  els.rrRewardValue.textContent = "0.00";
+  els.rrDistanceValue.textContent = "0.0000";
+  els.rrRatioValue.textContent = "1:0.00";
+  els.rrSummary.textContent = metrics.message;
+}
+
 function tradeMetaLine(trade) {
   const items = [trade.notes ? "Notes added" : "No notes"];
   if (trade.image) items.push("Chart attached");
+  const rrMetrics = getRiskRewardMetrics(trade);
+  if (rrMetrics.state === "ready") {
+    items.push("RR 1:" + rrMetrics.ratio.toFixed(2));
+  } else if (trade.stopLoss !== "" || trade.takeProfit !== "") {
+    items.push("SL/TP set");
+  }
   return items.join(" | ");
 }
 
@@ -535,6 +715,9 @@ function exportTrades() {
       "Contract Size",
       "Entry",
       "Exit",
+      "Stop Loss",
+      "Take Profit",
+      "RR Ratio",
       "P&L",
       "Notes",
       "Has Image"
@@ -544,6 +727,7 @@ function exportTrades() {
   ];
 
   rowsToExport.forEach((trade) => {
+    const rrMetrics = getRiskRewardMetrics(trade);
     csvLines.push(
       [
         trade.date,
@@ -554,6 +738,9 @@ function exportTrades() {
         trade.contract || "",
         trade.entry,
         trade.exit,
+        trade.stopLoss === "" ? "" : trade.stopLoss,
+        trade.takeProfit === "" ? "" : trade.takeProfit,
+        rrMetrics.state === "ready" ? "1:" + rrMetrics.ratio.toFixed(2) : "",
         trade.pnl,
         trade.notes,
         trade.image ? "Yes" : "No"
@@ -712,12 +899,15 @@ function fillForm(trade) {
   els.contract.value = trade.contract || "";
   els.entry.value = trade.entry;
   els.exit.value = trade.exit;
+  els.stopLoss.value = trade.stopLoss === "" ? "" : trade.stopLoss;
+  els.takeProfit.value = trade.takeProfit === "" ? "" : trade.takeProfit;
   els.notes.value = trade.notes || "";
   tradeImageData = trade.image || "";
   tradeImageLoadPromise = Promise.resolve();
   els.tradeImage.value = "";
   renderTradeImagePreview(tradeImageData);
   showCustomField();
+  updateRiskRewardCalculator(trade);
 
   els.formTitle.textContent = "Edit Trade";
   els.formSubtitle.textContent = "Update the entry so the workbook reflects the trade exactly as it was managed.";
@@ -733,11 +923,14 @@ function resetForm() {
   els.dir.value = "Long";
   els.size.value = "1";
   els.contract.value = "";
+  els.stopLoss.value = "";
+  els.takeProfit.value = "";
   clearTradeImage();
   els.formTitle.textContent = "Add Trade";
   els.formSubtitle.textContent = "Log the position details immediately after execution so your review stays accurate.";
   els.saveButton.textContent = "Save Trade";
   showCustomField();
+  updateRiskRewardCalculator();
 }
 
 function removeTrade(id) {
@@ -1313,9 +1506,14 @@ els.form.addEventListener("submit", async (event) => {
     instrument: els.instrument.value,
     dir: els.dir.value,
     size: Number(els.size.value) || 1,
-    contract: els.instrument.value === "custom" ? Number(els.contract.value) || "" : "",
+    contract:
+      els.instrument.value === "custom"
+        ? readOptionalNumber(els.contract.value) ?? ""
+        : "",
     entry: Number(els.entry.value),
     exit: Number(els.exit.value),
+    stopLoss: readOptionalNumber(els.stopLoss.value) ?? "",
+    takeProfit: readOptionalNumber(els.takeProfit.value) ?? "",
     notes: els.notes.value.trim(),
     image: tradeImageData
   };
@@ -1373,7 +1571,10 @@ els.clearAll.addEventListener("click", () => {
   showToast("Journal cleared.");
 });
 
-els.instrument.addEventListener("change", showCustomField);
+els.instrument.addEventListener("change", () => {
+  showCustomField();
+  updateRiskRewardCalculator();
+});
 els.tradeImage.addEventListener("change", handleTradeImageChange);
 els.removeTradeImage.addEventListener("click", clearTradeImage);
 els.resetForm.addEventListener("click", resetForm);
@@ -1408,6 +1609,21 @@ if (els.exportJournal) {
 els.deskTabs.forEach((button) => {
   button.addEventListener("click", () => {
     setActiveDesk(button.dataset.desk);
+  });
+});
+[
+  els.symbol,
+  els.dir,
+  els.size,
+  els.contract,
+  els.entry,
+  els.stopLoss,
+  els.takeProfit
+].forEach((field) => {
+  if (!field) return;
+  const eventName = field.tagName === "SELECT" ? "change" : "input";
+  field.addEventListener(eventName, () => {
+    updateRiskRewardCalculator();
   });
 });
 els.chartForm.addEventListener("submit", analyzeChart);

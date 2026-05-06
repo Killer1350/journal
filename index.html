@@ -556,6 +556,62 @@
                 <input type="number" id="exit" step="any" required />
               </div>
 
+              <div class="field">
+                <label for="stopLoss">Stop Loss</label>
+                <input
+                  type="number"
+                  id="stopLoss"
+                  step="any"
+                  placeholder="1.0950"
+                />
+              </div>
+              <div class="field">
+                <label for="takeProfit">Take Profit</label>
+                <input
+                  type="number"
+                  id="takeProfit"
+                  step="any"
+                  placeholder="1.1100"
+                />
+              </div>
+
+              <div class="field field-full">
+                <div class="rr-card" id="rrCard">
+                  <div class="rr-head">
+                    <div>
+                      <div class="panel-kicker">Risk Planner</div>
+                      <strong>RR Calculator</strong>
+                    </div>
+                    <div class="rr-badge rr-badge-wait" id="rrStatusBadge">
+                      Incomplete
+                    </div>
+                  </div>
+                  <p class="rr-copy" id="rrSummary">
+                    Add entry, stop loss, and take profit to calculate risk,
+                    reward, and ratio before saving the trade.
+                  </p>
+
+                  <div class="rr-grid">
+                    <div class="rr-metric">
+                      <span>Risk to SL</span>
+                      <strong id="rrRiskValue">0.00</strong>
+                    </div>
+                    <div class="rr-metric">
+                      <span>Reward to TP</span>
+                      <strong id="rrRewardValue">0.00</strong>
+                    </div>
+                    <div class="rr-metric">
+                      <span>Price Risk</span>
+                      <strong id="rrDistanceValue">0.0000</strong>
+                    </div>
+                    <div class="rr-metric">
+                      <span>R:R Ratio</span>
+                      <strong id="rrRatioValue">1:0.00</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div class="field field-full">
                 <label for="notes">Notes</label>
                 <textarea

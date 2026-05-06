@@ -569,6 +569,101 @@ tbody tr:last-child td {
   margin-top: 12px;
 }
 
+.rr-card {
+  padding: 18px;
+  border-radius: 20px;
+  border: 1px solid var(--line);
+  background:
+    radial-gradient(circle at top right, rgba(39, 100, 255, 0.08), transparent 26%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(246, 249, 253, 0.94));
+}
+
+.rr-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.rr-head strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1rem;
+  line-height: 1.1;
+}
+
+.rr-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 8px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.rr-badge-ready {
+  color: var(--teal);
+  background: var(--teal-soft);
+  border-color: rgba(20, 154, 104, 0.16);
+}
+
+.rr-badge-error {
+  color: var(--red);
+  background: var(--red-soft);
+  border-color: rgba(195, 84, 84, 0.16);
+}
+
+.rr-badge-wait {
+  color: var(--gold);
+  background: var(--gold-soft);
+  border-color: rgba(180, 122, 31, 0.16);
+}
+
+.rr-copy {
+  margin: 14px 0 0;
+  font-size: 13px;
+  line-height: 1.75;
+  color: var(--text-soft);
+}
+
+.rr-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.rr-metric {
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid rgba(16, 32, 58, 0.08);
+  background: rgba(255, 255, 255, 0.74);
+}
+
+.rr-metric span {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--text-faint);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.rr-metric strong {
+  display: block;
+  font-size: 1.16rem;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
 .mono {
   font-variant-numeric: tabular-nums;
 }
@@ -1377,6 +1472,7 @@ input[type="file"]::file-selector-button {
   .metrics,
   .signal-overview,
   .result-grid,
+  .rr-grid,
   .form-grid,
   .journal-toolbar {
     grid-template-columns: 1fr;
