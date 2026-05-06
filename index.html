@@ -3,132 +3,504 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta name="theme-color" content="#0f2038" />
-  <title>Trading Workbook | SignalPro</title>
+  <meta name="theme-color" content="#091426" />
+  <meta
+    name="description"
+    content="SignalPro Workbook is a modern trading journal MVP with trade logging, screenshot review, and AI-assisted chart, macro, and planning workflows."
+  />
+  <title>SignalPro Workbook | Trading Journal MVP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@600;700;800&display=swap"
+    rel="stylesheet"
+  />
   <link rel="stylesheet" href="./styles.css" />
 </head>
 <body>
   <div class="app-shell">
-    <aside class="sidebar">
-      <div class="brand">
+    <header class="app-topbar">
+      <a class="brand" href="#overview" aria-label="SignalPro Workbook home">
         <div class="brand-mark">SP</div>
-        <div>
+        <div class="brand-copy">
           <div class="brand-kicker">Private Trading Desk</div>
           <div class="brand-title">SignalPro Workbook</div>
         </div>
-      </div>
+      </a>
 
-      <div class="sidebar-block">
-        <div class="sidebar-label">Workspace</div>
-        <div class="sidebar-card">
-          <div class="sidebar-card-title">Journal + Research + Review</div>
-          <p class="sidebar-copy">
-            One desk for execution tracking, chart intelligence, macro scanning, and fast AI-assisted trade planning.
-          </p>
-        </div>
-      </div>
+      <nav class="topbar-nav" aria-label="Primary navigation">
+        <a href="#journalSection">Journal</a>
+        <a href="#formPanel">New Trade</a>
+        <a href="#aiSection">AI Desk</a>
+        <a href="#reviewPanel">Review</a>
+      </nav>
 
-      <div class="sidebar-block">
-        <div class="sidebar-label">AI Modes</div>
-        <div class="sidebar-list">
-          <div class="sidebar-pill">Chart Vision</div>
-          <div class="sidebar-pill">Macro Radar</div>
-          <div class="sidebar-pill">Desk Copilot</div>
-        </div>
+      <div class="topbar-actions">
+        <button class="btn btn-secondary btn-small" id="clearJournalFilters" type="button">
+          Clear Filters
+        </button>
+        <button class="btn btn-primary btn-small" id="exportJournal" type="button">
+          Export CSV
+        </button>
       </div>
+    </header>
 
-      <div class="sidebar-block">
-        <div class="sidebar-label">Engine</div>
-        <div class="sidebar-card compact">
-          <div class="status-badge status-wait" id="aiConfigStatus">Checking engine</div>
-          <p class="sidebar-copy" id="aiConfigNote">
-            The workspace is checking whether the hosted AI engine is online and ready.
-          </p>
-        </div>
-      </div>
-
-      <div class="sidebar-foot">
-        Hosted mode keeps the OpenAI key on the server, not in the browser.
-      </div>
-    </aside>
-
-    <main class="main">
-      <section class="hero">
+    <main class="workspace">
+      <section class="hero" id="overview">
         <div class="hero-copy">
-          <div class="eyebrow">Execution Meets Intelligence</div>
-          <h1>Trade like you have a desk, not just a journal.</h1>
+          <div class="eyebrow">Execution Workspace</div>
+          <h1>A sharper trading journal with an AI desk built for real review.</h1>
           <p>
-            Track performance, inspect chart screenshots, monitor live fundamentals, and ask for structured trade plans inside one professional workspace.
+            Capture execution cleanly, keep chart evidence with every trade,
+            filter the journal fast, and switch between chart, macro, and
+            copilot workflows inside one focused MVP.
           </p>
+
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#journalSection">Open Journal</a>
+            <a class="btn btn-secondary" href="#aiSection">Open AI Desk</a>
+          </div>
         </div>
 
-        <div class="hero-metrics">
-          <div class="hero-metric">
-            <span>Net P&amp;L</span>
-            <strong id="heroTotal">0.00</strong>
+        <div class="hero-side">
+          <div class="hero-metrics">
+            <div class="hero-metric">
+              <span>Net P&amp;L</span>
+              <strong id="heroTotal">0.00</strong>
+            </div>
+            <div class="hero-metric">
+              <span>Win Rate</span>
+              <strong id="heroWin">0%</strong>
+            </div>
+            <div class="hero-metric">
+              <span>Trades Logged</span>
+              <strong id="heroCount">0</strong>
+            </div>
+            <div class="hero-metric">
+              <span>Average Trade</span>
+              <strong id="heroAverage">0.00</strong>
+            </div>
           </div>
-          <div class="hero-metric">
-            <span>Win Rate</span>
-            <strong id="heroWin">0%</strong>
-          </div>
-          <div class="hero-metric">
-            <span>Trades Logged</span>
-            <strong id="heroCount">0</strong>
-          </div>
-          <div class="hero-metric">
-            <span>Average Trade</span>
-            <strong id="heroAverage">0.00</strong>
+
+          <div class="hero-brief">
+            <div class="hero-brief-head">
+              <span class="panel-kicker">Desk Standard</span>
+              <span class="hero-chip">MVP</span>
+            </div>
+            <p>
+              Log the trade, attach the chart, document the reason, then let
+              the desk pressure-test the setup before it turns into a habit.
+            </p>
+            <div class="hero-flow" aria-label="Workflow">
+              <span>Capture</span>
+              <span>Review</span>
+              <span>Analyze</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <div class="main-grid">
-        <section class="panel ledger-panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-kicker">Execution Ledger</div>
-              <h2>Trade Journal</h2>
-              <p class="panel-copy">
-                Review every position in one place so the journal becomes a real decision archive, not just a list of entries.
-              </p>
+      <div class="workspace-grid">
+        <div class="primary-column">
+          <section class="panel journal-panel" id="journalSection">
+            <div class="section-head">
+              <div>
+                <div class="panel-kicker">Execution Journal</div>
+                <h2>Trade Ledger</h2>
+                <p class="panel-copy">
+                  Keep the journal tight enough to review quickly and detailed
+                  enough to learn from every position.
+                </p>
+              </div>
+              <button class="btn btn-danger" id="clearAll" type="button">
+                Clear Journal
+              </button>
             </div>
-            <button class="btn btn-danger" id="clearAll" type="button">Clear Journal</button>
-          </div>
 
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Symbol</th>
-                  <th>Market</th>
-                  <th>Side</th>
-                  <th>Size</th>
-                  <th>Entry</th>
-                  <th>Exit</th>
-                  <th>P&amp;L</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody id="rows"></tbody>
-            </table>
-          </div>
+            <div class="journal-toolbar" aria-label="Journal controls">
+              <div class="toolbar-field toolbar-search">
+                <label for="journalSearch">Search</label>
+                <input
+                  id="journalSearch"
+                  type="search"
+                  placeholder="Search symbol, notes, or date"
+                />
+              </div>
 
-          <div class="panel-note">
-            Trades are stored in this browser for your personal journal history.
-          </div>
-        </section>
+              <div class="toolbar-field">
+                <label for="journalFilterMarket">Market</label>
+                <select id="journalFilterMarket">
+                  <option value="all">All markets</option>
+                  <option value="forex">Forex</option>
+                  <option value="gold">Gold</option>
+                  <option value="silver">Silver</option>
+                  <option value="indices">Indices</option>
+                  <option value="crypto">Crypto</option>
+                  <option value="custom">Custom</option>
+                </select>
+              </div>
 
-        <aside class="stack">
-          <section class="panel" id="formPanel">
-            <div class="panel-head">
+              <div class="toolbar-field">
+                <label for="journalFilterDirection">Side</label>
+                <select id="journalFilterDirection">
+                  <option value="all">All sides</option>
+                  <option value="Long">Long</option>
+                  <option value="Short">Short</option>
+                </select>
+              </div>
+
+              <div class="toolbar-meta">
+                <div class="toolbar-chip">
+                  <strong id="filteredTradeCount">0</strong>
+                  <span>Visible</span>
+                </div>
+                <div class="toolbar-chip toolbar-chip-muted" id="filterStateText">
+                  All trades
+                </div>
+              </div>
+            </div>
+
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Symbol</th>
+                    <th>Market</th>
+                    <th>Side</th>
+                    <th>Size</th>
+                    <th>Entry</th>
+                    <th>Exit</th>
+                    <th>P&amp;L</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="rows"></tbody>
+              </table>
+            </div>
+
+            <div class="panel-note">
+              Trades are stored in this browser. Use CSV export if you want a
+              portable backup of the current view.
+            </div>
+          </section>
+
+          <section class="panel ai-panel" id="aiSection">
+            <div class="section-head">
+              <div>
+                <div class="panel-kicker">SignalPro Intelligence</div>
+                <h2>AI Desk</h2>
+                <p class="panel-copy">
+                  Use one focused workflow at a time instead of wrestling with
+                  four equal-weight sections on the same screen.
+                </p>
+              </div>
+              <div class="brand-chip">Server Protected</div>
+            </div>
+
+            <div class="signal-overview">
+              <div class="signal-card">
+                <h4>Chart Vision</h4>
+                <p>
+                  Visual structure analysis with directional bias, confluence,
+                  invalidation, and execution prompts.
+                </p>
+              </div>
+              <div class="signal-card">
+                <h4>Macro Radar</h4>
+                <p>
+                  Current web-based market research centered on active macro
+                  drivers and event risk.
+                </p>
+              </div>
+              <div class="signal-card">
+                <h4>Desk Copilot</h4>
+                <p>
+                  A structured trading assistant for planning, review, and
+                  higher-quality decision making.
+                </p>
+              </div>
+            </div>
+
+            <div class="desk-tabs" id="deskTabs" role="tablist" aria-label="AI desk tools">
+              <button
+                class="desk-tab is-active"
+                type="button"
+                role="tab"
+                aria-selected="true"
+                data-desk="chart"
+              >
+                Chart Vision
+              </button>
+              <button
+                class="desk-tab"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                data-desk="news"
+              >
+                Macro Radar
+              </button>
+              <button
+                class="desk-tab"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                data-desk="copilot"
+              >
+                Desk Copilot
+              </button>
+              <button
+                class="desk-tab"
+                type="button"
+                role="tab"
+                aria-selected="false"
+                data-desk="stream"
+              >
+                Briefing Stream
+              </button>
+            </div>
+
+            <section class="desk-panel is-active" data-panel="chart">
+              <div class="tool-head">
+                <div>
+                  <div class="panel-kicker">Visual Signal Analysis</div>
+                  <h3>Chart Vision Agent</h3>
+                  <p class="panel-copy">
+                    Upload a chart and get a structured read with bias,
+                    invalidation, targets, and execution checkpoints.
+                  </p>
+                </div>
+                <div class="section-tag">Image + Structure</div>
+              </div>
+
+              <div class="tool-grid">
+                <div class="tool-card">
+                  <form id="chartForm" class="form-grid compact-grid">
+                    <div class="field">
+                      <label for="chartSymbol">Symbol</label>
+                      <input id="chartSymbol" placeholder="XAUUSD" required />
+                    </div>
+                    <div class="field">
+                      <label for="chartTimeframe">Timeframe</label>
+                      <input id="chartTimeframe" placeholder="H1 / H4 / 15m" required />
+                    </div>
+                    <div class="field field-full">
+                      <label for="chartImage">Chart Screenshot</label>
+                      <input id="chartImage" type="file" accept="image/*" required />
+                    </div>
+                    <div class="field field-full">
+                      <label for="chartNotes">Trader Context</label>
+                      <textarea
+                        id="chartNotes"
+                        placeholder="Session, setup idea, marked levels, or what you want the model to concentrate on."
+                      ></textarea>
+                    </div>
+                    <div class="form-actions field-full">
+                      <button class="btn btn-primary" type="submit">
+                        Run Chart Vision
+                      </button>
+                      <button class="btn btn-secondary" type="button" id="resetChart">
+                        Reset Chart Desk
+                      </button>
+                    </div>
+                  </form>
+
+                  <div class="status-row">
+                    <div class="status-badge status-wait" id="chartStatus">
+                      Awaiting screenshot
+                    </div>
+                    <div class="status-note" id="chartStatusNote">
+                      The AI returns a conditional trade read, not a guaranteed signal.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tool-card">
+                  <div class="preview-box" id="chartPreview">
+                    Upload a screenshot to inspect structure, momentum, and
+                    execution quality.
+                  </div>
+                  <div class="result-shell">
+                    <div id="chartResult" class="result-empty">
+                      No chart analysis yet.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="desk-panel" data-panel="news" hidden>
+              <div class="tool-head">
+                <div>
+                  <div class="panel-kicker">Live Market Research</div>
+                  <h3>Macro Radar Agent</h3>
+                  <p class="panel-copy">
+                    Scan current coverage, policy context, and risk sentiment
+                    before leaning too hard on a single market bias.
+                  </p>
+                </div>
+                <div class="section-tag">Web Search Intelligence</div>
+              </div>
+
+              <div class="tool-grid">
+                <div class="tool-card">
+                  <form id="newsForm" class="form-grid compact-grid">
+                    <div class="field">
+                      <label for="newsSymbol">Symbol / Asset</label>
+                      <input id="newsSymbol" placeholder="EURUSD, BTCUSD, NAS100" required />
+                    </div>
+                    <div class="field">
+                      <label for="newsHorizon">Trading Horizon</label>
+                      <select id="newsHorizon">
+                        <option>Intraday</option>
+                        <option>Swing</option>
+                        <option>Position</option>
+                      </select>
+                    </div>
+                    <div class="field field-full">
+                      <label for="newsFocus">Focus</label>
+                      <input
+                        id="newsFocus"
+                        placeholder="Rates, CPI, central banks, earnings, risk sentiment, flows"
+                      />
+                    </div>
+                    <div class="field field-full">
+                      <label for="newsNotes">Extra Notes</label>
+                      <textarea
+                        id="newsNotes"
+                        placeholder="Your current bias, known event risk, or the angle you want the AI to prioritize."
+                      ></textarea>
+                    </div>
+                    <div class="form-actions field-full">
+                      <button class="btn btn-primary" type="submit">
+                        Run Macro Radar
+                      </button>
+                      <button class="btn btn-secondary" type="button" id="resetNews">
+                        Reset Macro Radar
+                      </button>
+                    </div>
+                  </form>
+
+                  <div class="status-row">
+                    <div class="status-badge status-wait" id="newsStatus">
+                      Awaiting query
+                    </div>
+                    <div class="status-note" id="newsStatusNote">
+                      This agent searches current web coverage and summarizes the market implications.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tool-card">
+                  <div class="result-shell result-shell-roomy">
+                    <div id="newsResult" class="result-empty">
+                      No fundamental analysis yet.
+                    </div>
+                    <div id="newsSources"></div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="desk-panel" data-panel="copilot" hidden>
+              <div class="tool-head">
+                <div>
+                  <div class="panel-kicker">Interactive Market Assistant</div>
+                  <h3>Desk Copilot</h3>
+                  <p class="panel-copy">
+                    Use the copilot to turn market ideas into cleaner plans,
+                    tighter review questions, and more disciplined next steps.
+                  </p>
+                </div>
+                <div class="section-tag">Chat-Style Workflow</div>
+              </div>
+
+              <div class="tool-grid">
+                <div class="tool-card">
+                  <form id="copilotForm" class="form-grid compact-grid">
+                    <div class="field">
+                      <label for="copilotMode">Copilot Mode</label>
+                      <select id="copilotMode">
+                        <option value="trade-plan">Trade Plan</option>
+                        <option value="journal-review">Journal Review</option>
+                        <option value="market-question">Market Question</option>
+                      </select>
+                    </div>
+                    <div class="field">
+                      <label for="copilotSymbol">Symbol / Topic</label>
+                      <input id="copilotSymbol" placeholder="GBPUSD or your trading question" required />
+                    </div>
+                    <div class="field field-full">
+                      <label for="copilotPrompt">Ask The Desk</label>
+                      <textarea
+                        id="copilotPrompt"
+                        placeholder="Example: Build me a clean intraday trade plan for GBPUSD around London open, with levels to watch, invalidation, and what would make the setup not worth taking."
+                      ></textarea>
+                    </div>
+                    <div class="form-actions field-full">
+                      <button class="btn btn-primary" type="submit">Ask Copilot</button>
+                      <button class="btn btn-secondary" type="button" id="resetCopilot">
+                        Reset Copilot
+                      </button>
+                    </div>
+                  </form>
+
+                  <div class="status-row">
+                    <div class="status-badge status-wait" id="copilotStatus">
+                      Ready for prompt
+                    </div>
+                    <div class="status-note" id="copilotStatusNote">
+                      Use this as your fast AI assistant for planning, review, and market questions.
+                    </div>
+                  </div>
+                </div>
+
+                <div class="tool-card">
+                  <div class="copilot-box" id="copilotResult">
+                    <p>No copilot response yet.</p>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="desk-panel" data-panel="stream" hidden>
+              <div class="tool-head">
+                <div>
+                  <div class="panel-kicker">Live Terminal</div>
+                  <h3>AI Briefing Stream</h3>
+                  <p class="panel-copy">
+                    Recent chart, macro, and copilot outputs stay here so the
+                    desk feels like a running decision feed, not a collection of
+                    isolated results.
+                  </p>
+                </div>
+                <div class="section-tag">Live Feed</div>
+              </div>
+
+              <div class="tool-card">
+                <div class="stream-shell" id="briefingStream">
+                  <div class="stream-empty">
+                    Run any AI mode to start building a live briefing stream here.
+                  </div>
+                </div>
+              </div>
+            </section>
+          </section>
+        </div>
+
+        <aside class="secondary-column">
+          <section class="panel form-panel" id="formPanel">
+            <div class="section-head section-head-compact">
               <div>
                 <div class="panel-kicker">Journal Entry</div>
                 <h3 id="formTitle">Add Trade</h3>
                 <p class="panel-copy" id="formSubtitle">
-                  Log the position details immediately after execution so your review stays accurate.
+                  Log the position details immediately after execution so your
+                  review stays accurate.
                 </p>
               </div>
+              <div class="section-tag">Live Entry Form</div>
             </div>
 
             <form id="journalForm" class="form-grid">
@@ -182,40 +554,54 @@
 
               <div class="field field-full">
                 <label for="notes">Notes</label>
-                <textarea id="notes" placeholder="Setup quality, execution notes, emotions, mistakes, or what you want to review later."></textarea>
+                <textarea
+                  id="notes"
+                  placeholder="Setup quality, execution notes, emotions, mistakes, or what you want to review later."
+                ></textarea>
               </div>
 
               <div class="field field-full">
                 <label for="tradeImage">Trade Screenshot</label>
                 <input id="tradeImage" type="file" accept="image/*" />
                 <div class="field-note">
-                  Optional. Save the chart or execution screenshot with this trade entry. Large phone screenshots are compressed automatically for browser storage.
+                  Optional. Save the chart or execution screenshot with this
+                  trade entry. Large phone screenshots are compressed
+                  automatically for browser storage.
                 </div>
               </div>
 
               <div class="field field-full">
-                <div class="trade-shot" id="tradeImagePreview">No trade screenshot attached yet.</div>
+                <div class="trade-shot" id="tradeImagePreview">
+                  No trade screenshot attached yet.
+                </div>
                 <div class="trade-shot-meta">
                   <div class="field-note" id="tradeImageMeta">
                     Attach a screenshot to keep the visual setup alongside your notes.
                   </div>
-                  <button class="btn btn-secondary" type="button" id="removeTradeImage" disabled>Remove Image</button>
+                  <button class="btn btn-secondary" type="button" id="removeTradeImage" disabled>
+                    Remove Image
+                  </button>
                 </div>
               </div>
 
               <div class="form-actions field-full">
-                <button class="btn btn-primary" type="submit" id="saveButton">Save Trade</button>
-                <button class="btn btn-secondary" type="button" id="resetForm">Reset Form</button>
+                <button class="btn btn-primary" type="submit" id="saveButton">
+                  Save Trade
+                </button>
+                <button class="btn btn-secondary" type="button" id="resetForm">
+                  Reset Form
+                </button>
               </div>
             </form>
           </section>
 
-          <section class="panel">
-            <div class="panel-head">
+          <section class="panel metrics-panel">
+            <div class="section-head section-head-compact">
               <div>
                 <div class="panel-kicker">Performance Snapshot</div>
                 <h3>Journal Metrics</h3>
               </div>
+              <div class="section-tag">Auto Summary</div>
             </div>
 
             <div class="metrics">
@@ -238,197 +624,48 @@
             </div>
           </section>
 
-          <section class="panel insight-card">
-            <div class="panel-kicker">Review Standard</div>
+          <section class="panel engine-panel">
+            <div class="panel-kicker">Engine</div>
+            <div class="engine-card">
+              <div class="status-badge status-wait" id="aiConfigStatus">
+                Checking engine
+              </div>
+              <p class="engine-copy" id="aiConfigNote">
+                The workspace is checking whether the hosted AI engine is online and ready.
+              </p>
+            </div>
+          </section>
+
+          <section class="panel insight-panel" id="reviewPanel">
+            <div class="panel-kicker">Review Focus</div>
             <p id="reviewNote">
-              A strong workbook captures the setup, the catalyst, the risk, and whether the execution followed plan. Keep those four parts consistent.
+              A strong workbook captures the setup, the catalyst, the risk, and
+              whether the execution followed plan. Keep those four parts consistent.
             </p>
+
+            <div class="review-grid">
+              <div class="review-card">
+                <span>Capture</span>
+                <strong>Execution data</strong>
+                <p>Entry, exit, size, and the real context behind the trade.</p>
+              </div>
+              <div class="review-card">
+                <span>Validate</span>
+                <strong>Chart and macro</strong>
+                <p>Store the screenshot and the reason so review is evidence-based.</p>
+              </div>
+              <div class="review-card">
+                <span>Refine</span>
+                <strong>Decision quality</strong>
+                <p>Use the AI desk to pressure-test bias before changing process rules.</p>
+              </div>
+            </div>
           </section>
         </aside>
       </div>
-
-      <section class="panel signalpro-shell">
-        <div class="panel-head">
-          <div>
-            <div class="panel-kicker">SignalPro Intelligence</div>
-            <h2>AI Trading Workspace</h2>
-            <p class="panel-copy">
-              A hosted AI desk for visual chart reads, live fundamental scanning, and fast trading copilot workflows.
-            </p>
-          </div>
-          <div class="brand-chip">Server Protected</div>
-        </div>
-
-        <div class="signal-overview">
-          <div class="signal-card">
-            <h4>Chart Vision</h4>
-            <p>Visual structure analysis with directional bias, invalidation, confluences, and execution prompts.</p>
-          </div>
-          <div class="signal-card">
-            <h4>Macro Radar</h4>
-            <p>Live web-based market research focused on the current drivers behind a symbol or asset.</p>
-          </div>
-          <div class="signal-card">
-            <h4>Desk Copilot</h4>
-            <p>A chat-style assistant for trade plans, market questions, and deeper review prompts.</p>
-          </div>
-        </div>
-      </section>
-
-      <div class="signal-grid">
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-kicker">Visual Signal Analysis</div>
-              <h3>Chart Vision Agent</h3>
-            </div>
-            <div class="section-tag">Image + Structure</div>
-          </div>
-
-          <form id="chartForm" class="form-grid compact-grid">
-            <div class="field">
-              <label for="chartSymbol">Symbol</label>
-              <input id="chartSymbol" placeholder="XAUUSD" required />
-            </div>
-            <div class="field">
-              <label for="chartTimeframe">Timeframe</label>
-              <input id="chartTimeframe" placeholder="H1 / H4 / 15m" required />
-            </div>
-            <div class="field field-full">
-              <label for="chartImage">Chart Screenshot</label>
-              <input id="chartImage" type="file" accept="image/*" required />
-            </div>
-            <div class="field field-full">
-              <label for="chartNotes">Trader Context</label>
-              <textarea id="chartNotes" placeholder="Session, setup idea, marked levels, or what you want the model to concentrate on."></textarea>
-            </div>
-            <div class="form-actions field-full">
-              <button class="btn btn-primary" type="submit">Run Chart Vision</button>
-              <button class="btn btn-secondary" type="button" id="resetChart">Reset Chart Desk</button>
-            </div>
-          </form>
-
-          <div class="status-row">
-            <div class="status-badge status-wait" id="chartStatus">Awaiting screenshot</div>
-            <div class="status-note" id="chartStatusNote">The AI returns a conditional trade read, not a guaranteed signal.</div>
-          </div>
-
-          <div class="result-shell">
-            <div class="preview-box" id="chartPreview">
-              Upload a screenshot to inspect structure, momentum, and execution quality.
-            </div>
-            <div id="chartResult" class="result-empty">
-              No chart analysis yet.
-            </div>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-kicker">Live Market Research</div>
-              <h3>Macro Radar Agent</h3>
-            </div>
-            <div class="section-tag">Web Search Intelligence</div>
-          </div>
-
-          <form id="newsForm" class="form-grid compact-grid">
-            <div class="field">
-              <label for="newsSymbol">Symbol / Asset</label>
-              <input id="newsSymbol" placeholder="EURUSD, BTCUSD, NAS100" required />
-            </div>
-            <div class="field">
-              <label for="newsHorizon">Trading Horizon</label>
-              <select id="newsHorizon">
-                <option>Intraday</option>
-                <option>Swing</option>
-                <option>Position</option>
-              </select>
-            </div>
-            <div class="field field-full">
-              <label for="newsFocus">Focus</label>
-              <input id="newsFocus" placeholder="Rates, CPI, central banks, earnings, risk sentiment, flows" />
-            </div>
-            <div class="field field-full">
-              <label for="newsNotes">Extra Notes</label>
-              <textarea id="newsNotes" placeholder="Your current bias, known event risk, or the angle you want the AI to prioritize."></textarea>
-            </div>
-            <div class="form-actions field-full">
-              <button class="btn btn-primary" type="submit">Run Macro Radar</button>
-              <button class="btn btn-secondary" type="button" id="resetNews">Reset Macro Radar</button>
-            </div>
-          </form>
-
-          <div class="status-row">
-            <div class="status-badge status-wait" id="newsStatus">Awaiting query</div>
-            <div class="status-note" id="newsStatusNote">This agent searches current web coverage and summarizes the market implications.</div>
-          </div>
-
-          <div class="result-shell">
-            <div id="newsResult" class="result-empty">No fundamental analysis yet.</div>
-            <div id="newsSources"></div>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-kicker">Interactive Market Assistant</div>
-              <h3>Desk Copilot</h3>
-            </div>
-            <div class="section-tag">Chat-Style Workflow</div>
-          </div>
-
-          <form id="copilotForm" class="form-grid compact-grid">
-            <div class="field">
-              <label for="copilotMode">Copilot Mode</label>
-              <select id="copilotMode">
-                <option value="trade-plan">Trade Plan</option>
-                <option value="journal-review">Journal Review</option>
-                <option value="market-question">Market Question</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="copilotSymbol">Symbol / Topic</label>
-              <input id="copilotSymbol" placeholder="GBPUSD or your trading question" required />
-            </div>
-            <div class="field field-full">
-              <label for="copilotPrompt">Ask The Desk</label>
-              <textarea id="copilotPrompt" placeholder="Example: Build me a clean intraday trade plan for GBPUSD around London open, with levels to watch, invalidation, and what would make the setup not worth taking."></textarea>
-            </div>
-            <div class="form-actions field-full">
-              <button class="btn btn-primary" type="submit">Ask Copilot</button>
-              <button class="btn btn-secondary" type="button" id="resetCopilot">Reset Copilot</button>
-            </div>
-          </form>
-
-          <div class="status-row">
-            <div class="status-badge status-wait" id="copilotStatus">Ready for prompt</div>
-            <div class="status-note" id="copilotStatusNote">Use this as your fast AI assistant for planning, review, and market questions.</div>
-          </div>
-
-          <div class="copilot-box" id="copilotResult">
-            <p>No copilot response yet.</p>
-          </div>
-        </section>
-
-        <section class="panel">
-          <div class="panel-head">
-            <div>
-              <div class="panel-kicker">Live Terminal</div>
-              <h3>AI Briefing Stream</h3>
-              <p class="panel-copy">
-                The desk logs recent chart, macro, and copilot outputs so your workflow feels more like a live intelligence terminal.
-              </p>
-            </div>
-          </div>
-
-          <div class="stream-shell" id="briefingStream">
-            <div class="stream-empty">Run any AI mode to start building a live briefing stream here.</div>
-          </div>
-        </section>
-      </div>
     </main>
+
+    <div class="toast-stack" id="toastStack" aria-live="polite" aria-atomic="false"></div>
   </div>
 
   <script src="./app.js"></script>
