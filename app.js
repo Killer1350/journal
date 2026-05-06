@@ -105,6 +105,13 @@ const copilotSchema = {
 const els = {
   rows: document.getElementById("rows"),
   clearAll: document.getElementById("clearAll"),
+  clearJournalFilters: document.getElementById("clearJournalFilters"),
+  exportJournal: document.getElementById("exportJournal"),
+  journalSearch: document.getElementById("journalSearch"),
+  journalFilterMarket: document.getElementById("journalFilterMarket"),
+  journalFilterDirection: document.getElementById("journalFilterDirection"),
+  filteredTradeCount: document.getElementById("filteredTradeCount"),
+  filterStateText: document.getElementById("filterStateText"),
   form: document.getElementById("journalForm"),
   formPanel: document.getElementById("formPanel"),
   formTitle: document.getElementById("formTitle"),
@@ -167,17 +174,32 @@ const els = {
   copilotStatusNote: document.getElementById("copilotStatusNote"),
   copilotResult: document.getElementById("copilotResult"),
   resetCopilot: document.getElementById("resetCopilot"),
-  briefingStream: document.getElementById("briefingStream")
+  briefingStream: document.getElementById("briefingStream"),
+  toastStack: document.getElementById("toastStack"),
+  deskTabs: Array.from(document.querySelectorAll(".desk-tab")),
+  deskPanels: Array.from(document.querySelectorAll(".desk-panel"))
 };
 
 let trades = loadTrades();
 let previewUrl = "";
 let tradeImageData = "";
 let tradeImageLoadPromise = Promise.resolve();
+const filterState = {
+  search: "",
+  instrument: "all",
+  direction: "all",
+  activeDesk: "chart"
+};
 
 function loadTrades() {
-  const saved = JSON.parse(localStorage.getItem(JOURNAL_KEY) || "[]");
-  return saved.map(normalizeTrade);
+  try {
+    const saved = JSON.parse(localStorage.getItem(JOURNAL_KEY) || "[]");
+    if (!Array.isArray(saved)) return [];
+    return saved.map(normalizeTrade);
+  } catch (error) {
+    console.warn("Could not parse saved journal data.", error);
+    return [];
+  }
 }
 
 function normalizeTrade(raw) {
@@ -270,7 +292,7 @@ function formatSigned(value) {
 function tradeMetaLine(trade) {
   const items = [trade.notes ? "Notes added" : "No notes"];
   if (trade.image) items.push("Chart attached");
-  return items.join(" • ");
+  return items.join(" | ");
 }
 
 function readFileAsDataUrl(file) {
@@ -386,12 +408,201 @@ function setStatus(node, mode, label) {
   node.textContent = label;
 }
 
+function showToast(message, tone = "neutral") {
+  if (!els.toastStack) return;
+
+  const toast = document.createElement("div");
+  toast.className = "toast toast-" + tone;
+  toast.textContent = message;
+  els.toastStack.appendChild(toast);
+
+  requestAnimationFrame(() => {
+    toast.classList.add("is-visible");
+  });
+
+  setTimeout(() => {
+    toast.classList.remove("is-visible");
+    setTimeout(() => toast.remove(), 180);
+  }, 2600);
+}
+
 function signalClass(value) {
   const text = String(value || "").toLowerCase();
   if (text.includes("buy") || text.includes("bull")) return "signal-buy";
   if (text.includes("sell") || text.includes("bear")) return "signal-sell";
   if (text.includes("wait") || text.includes("neutral")) return "signal-wait";
   return "signal-mixed";
+}
+
+function filtersActive() {
+  return Boolean(
+    filterState.search.trim() ||
+      filterState.instrument !== "all" ||
+      filterState.direction !== "all"
+  );
+}
+
+function getFilteredTrades() {
+  const query = filterState.search.trim().toLowerCase();
+
+  return trades.filter((trade) => {
+    if (
+      filterState.instrument !== "all" &&
+      trade.instrument !== filterState.instrument
+    ) {
+      return false;
+    }
+
+    if (filterState.direction !== "all" && trade.dir !== filterState.direction) {
+      return false;
+    }
+
+    if (!query) return true;
+
+    const haystack = [
+      trade.symbol,
+      trade.notes,
+      trade.date,
+      trade.dir,
+      instrumentLabels[trade.instrument] || trade.instrument
+    ]
+      .join(" ")
+      .toLowerCase();
+
+    return haystack.includes(query);
+  });
+}
+
+function updateJournalToolbar(visibleCount) {
+  const totalCount = trades.length;
+
+  if (els.filteredTradeCount) {
+    els.filteredTradeCount.textContent = String(visibleCount);
+  }
+
+  if (els.filterStateText) {
+    els.filterStateText.textContent = filtersActive()
+      ? "Showing " + visibleCount + " of " + totalCount
+      : "All " + totalCount + " trades";
+  }
+
+  if (els.clearJournalFilters) {
+    els.clearJournalFilters.disabled = !filtersActive();
+  }
+
+  if (els.clearAll) {
+    els.clearAll.disabled = totalCount === 0;
+  }
+
+  if (els.exportJournal) {
+    els.exportJournal.disabled = totalCount === 0;
+  }
+}
+
+function resetJournalFilters() {
+  filterState.search = "";
+  filterState.instrument = "all";
+  filterState.direction = "all";
+
+  if (els.journalSearch) els.journalSearch.value = "";
+  if (els.journalFilterMarket) els.journalFilterMarket.value = "all";
+  if (els.journalFilterDirection) els.journalFilterDirection.value = "all";
+
+  render();
+}
+
+function csvValue(value) {
+  return '"' + String(value ?? "").replace(/"/g, '""') + '"';
+}
+
+function exportTrades() {
+  const rowsToExport = [...getFilteredTrades()].sort((a, b) =>
+    b.date.localeCompare(a.date)
+  );
+
+  if (!rowsToExport.length) {
+    showToast("No trades available to export.", "error");
+    return;
+  }
+
+  const csvLines = [
+    [
+      "Date",
+      "Symbol",
+      "Market",
+      "Side",
+      "Size",
+      "Contract Size",
+      "Entry",
+      "Exit",
+      "P&L",
+      "Notes",
+      "Has Image"
+    ]
+      .map(csvValue)
+      .join(",")
+  ];
+
+  rowsToExport.forEach((trade) => {
+    csvLines.push(
+      [
+        trade.date,
+        trade.symbol,
+        instrumentLabels[trade.instrument] || "Custom",
+        trade.dir,
+        trade.size,
+        trade.contract || "",
+        trade.entry,
+        trade.exit,
+        trade.pnl,
+        trade.notes,
+        trade.image ? "Yes" : "No"
+      ]
+        .map(csvValue)
+        .join(",")
+    );
+  });
+
+  const blob = new Blob([csvLines.join("\n")], {
+    type: "text/csv;charset=utf-8"
+  });
+  const link = document.createElement("a");
+  const url = URL.createObjectURL(blob);
+  const stamp = new Date().toISOString().slice(0, 10);
+
+  link.href = url;
+  link.download = "signalpro-journal-" + stamp + ".csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  setTimeout(() => URL.revokeObjectURL(url), 0);
+  showToast(
+    "Exported " +
+      rowsToExport.length +
+      " trade" +
+      (rowsToExport.length === 1 ? "" : "s") +
+      " to CSV.",
+    "success"
+  );
+}
+
+function setActiveDesk(desk) {
+  if (!desk) return;
+
+  filterState.activeDesk = desk;
+
+  els.deskTabs.forEach((button) => {
+    const active = button.dataset.desk === desk;
+    button.classList.toggle("is-active", active);
+    button.setAttribute("aria-selected", String(active));
+  });
+
+  els.deskPanels.forEach((panel) => {
+    const active = panel.dataset.panel === desk;
+    panel.hidden = !active;
+    panel.classList.toggle("is-active", active);
+  });
 }
 
 function showCustomField() {
@@ -439,10 +650,17 @@ function updateSummary(total, wins, count, bestTrade) {
 }
 
 function render() {
-  const sorted = [...trades].sort((a, b) => b.date.localeCompare(a.date));
+  const filteredTrades = getFilteredTrades();
+  const sorted = [...filteredTrades].sort((a, b) => b.date.localeCompare(a.date));
 
   if (!sorted.length) {
-    els.rows.innerHTML = '<tr><td colspan="9" class="empty">No trades logged yet. Add your first completed trade to start building a real workbook history.</td></tr>';
+    const emptyMessage =
+      trades.length && filtersActive()
+        ? "No trades match the current filters. Clear or adjust the filters to see more entries."
+        : "No trades logged yet. Add your first completed trade to start building a real workbook history.";
+
+    els.rows.innerHTML =
+      '<tr><td colspan="9" class="empty">' + emptyMessage + "</td></tr>";
   } else {
     els.rows.innerHTML = sorted.map((trade) => {
       const marketClass = "pill pill-market pill-" + escapeHtml(trade.instrument);
@@ -474,6 +692,8 @@ function render() {
       `;
     }).join("");
   }
+
+  updateJournalToolbar(sorted.length);
 
   const total = trades.reduce((sum, trade) => sum + trade.pnl, 0);
   const wins = trades.filter((trade) => trade.pnl > 0).length;
@@ -536,6 +756,8 @@ function removeTrade(id) {
   if (els.tradeId.value === id) {
     resetForm();
   }
+
+  showToast("Removed " + trade.symbol + " from the journal.");
 }
 
 function addBriefingEntry(entry) {
@@ -793,7 +1015,7 @@ function renderCopilotAnalysis(result, topic, mode) {
       <div class="pill ${stanceClass}">${escapeHtml(result.stance)}</div>
     </div>
     ${paragraphMarkup(result.summary)}
-    <div class="result-grid" style="margin-top:16px;">
+    <div class="result-grid result-grid-spaced">
       <div class="result-card"><h4>Key Points</h4>${listMarkup(result.key_points)}</div>
       <div class="result-card"><h4>Risk Alerts</h4>${listMarkup(result.risk_alerts)}</div>
       <div class="result-card full"><h4>Next Steps</h4>${listMarkup(result.next_steps)}</div>
@@ -926,6 +1148,7 @@ async function analyzeChart(event) {
     renderChartAnalysis(parsed, els.chartSymbol.value.trim().toUpperCase(), els.chartTimeframe.value.trim());
     setStatus(els.chartStatus, "ready", "Chart analysis ready");
     els.chartStatusNote.textContent = "Chart Vision finished. Review the setup conditions before acting.";
+    showToast("Chart Vision finished.", "success");
   } catch (error) {
     setStatus(els.chartStatus, "error", "Chart analysis failed");
     els.chartStatusNote.textContent = friendlyAiError(error.message);
@@ -996,6 +1219,7 @@ async function analyzeNews(event) {
     renderNewsAnalysis(parsed, symbol, citations);
     setStatus(els.newsStatus, "ready", "Macro analysis ready");
     els.newsStatusNote.textContent = "Macro Radar finished. Verify major event timing before using the bias.";
+    showToast("Macro Radar finished.", "success");
   } catch (error) {
     setStatus(els.newsStatus, "error", "Macro analysis failed");
     els.newsStatusNote.textContent = friendlyAiError(error.message);
@@ -1070,6 +1294,7 @@ async function analyzeCopilot(event) {
     renderCopilotAnalysis(parsed, topic, mode);
     setStatus(els.copilotStatus, "ready", "Copilot response ready");
     els.copilotStatusNote.textContent = "Desk Copilot finished. Use it as structured thinking support, not as blind instruction.";
+    showToast("Desk Copilot response ready.", "success");
   } catch (error) {
     setStatus(els.copilotStatus, "error", "Copilot failed");
     els.copilotStatusNote.textContent = friendlyAiError(error.message);
@@ -1099,6 +1324,7 @@ els.form.addEventListener("submit", async (event) => {
 
   const nextTrades = [...trades];
   const existingIndex = trades.findIndex((item) => item.id === trade.id);
+  const isEditing = existingIndex >= 0;
   if (existingIndex >= 0) {
     nextTrades[existingIndex] = trade;
   } else {
@@ -1110,6 +1336,7 @@ els.form.addEventListener("submit", async (event) => {
   trades = nextTrades;
   render();
   resetForm();
+  showToast(isEditing ? "Trade updated." : "Trade saved.", "success");
 });
 
 els.rows.addEventListener("click", (event) => {
@@ -1135,14 +1362,54 @@ els.clearAll.addEventListener("click", () => {
   if (!saveTrades(nextTrades)) return;
 
   trades = nextTrades;
-  render();
   resetForm();
+  filterState.search = "";
+  filterState.instrument = "all";
+  filterState.direction = "all";
+  if (els.journalSearch) els.journalSearch.value = "";
+  if (els.journalFilterMarket) els.journalFilterMarket.value = "all";
+  if (els.journalFilterDirection) els.journalFilterDirection.value = "all";
+  render();
+  showToast("Journal cleared.");
 });
 
 els.instrument.addEventListener("change", showCustomField);
 els.tradeImage.addEventListener("change", handleTradeImageChange);
 els.removeTradeImage.addEventListener("click", clearTradeImage);
 els.resetForm.addEventListener("click", resetForm);
+if (els.journalSearch) {
+  els.journalSearch.addEventListener("input", () => {
+    filterState.search = els.journalSearch.value;
+    render();
+  });
+}
+if (els.journalFilterMarket) {
+  els.journalFilterMarket.addEventListener("change", () => {
+    filterState.instrument = els.journalFilterMarket.value;
+    render();
+  });
+}
+if (els.journalFilterDirection) {
+  els.journalFilterDirection.addEventListener("change", () => {
+    filterState.direction = els.journalFilterDirection.value;
+    render();
+  });
+}
+if (els.clearJournalFilters) {
+  els.clearJournalFilters.addEventListener("click", () => {
+    if (!filtersActive()) return;
+    resetJournalFilters();
+    showToast("Journal filters cleared.");
+  });
+}
+if (els.exportJournal) {
+  els.exportJournal.addEventListener("click", exportTrades);
+}
+els.deskTabs.forEach((button) => {
+  button.addEventListener("click", () => {
+    setActiveDesk(button.dataset.desk);
+  });
+});
 els.chartForm.addEventListener("submit", analyzeChart);
 els.resetChart.addEventListener("click", resetChartDesk);
 els.chartImage.addEventListener("change", updateChartPreview);
@@ -1156,4 +1423,5 @@ resetForm();
 resetChartDesk();
 resetNewsDesk();
 resetCopilotDesk();
+setActiveDesk(filterState.activeDesk);
 render();
