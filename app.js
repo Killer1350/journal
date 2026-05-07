@@ -196,7 +196,9 @@ const els = {
   briefingStream: document.getElementById("briefingStream"),
   toastStack: document.getElementById("toastStack"),
   deskTabs: Array.from(document.querySelectorAll(".desk-tab")),
-  deskPanels: Array.from(document.querySelectorAll(".desk-panel"))
+  deskPanels: Array.from(document.querySelectorAll(".desk-panel")),
+  topbarToggle: document.getElementById("topbarToggle"),
+  topbarNav: document.getElementById("topbarNav")
 };
 
 let trades = loadTrades();
@@ -1891,6 +1893,41 @@ els.newsForm.addEventListener("submit", analyzeNews);
 els.resetNews.addEventListener("click", resetNewsDesk);
 els.copilotForm.addEventListener("submit", analyzeCopilot);
 els.resetCopilot.addEventListener("click", resetCopilotDesk);
+
+function setupMobileNavigation() {
+  const nav = els.topbarNav;
+  const toggle = els.topbarToggle;
+  if (!nav || !toggle) return;
+
+  const closeNav = () => {
+    if (!nav.classList.contains("is-open")) return;
+    nav.classList.remove("is-open");
+    toggle.setAttribute("aria-expanded", "false");
+  };
+
+  toggle.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const isOpen = nav.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  nav.addEventListener("click", (event) => {
+    if (event.target.closest("a")) {
+      closeNav();
+    }
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!nav.classList.contains("is-open")) return;
+    if (!nav.contains(event.target) && !toggle.contains(event.target)) {
+      closeNav();
+    }
+  });
+
+  window.addEventListener("resize", closeNav);
+}
+
+setupMobileNavigation();
 
 refreshServerStatus();
 if (els.accountBalance) {
