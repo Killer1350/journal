@@ -613,6 +613,78 @@
               </div>
 
               <div class="field field-full">
+                <div class="rr-card lot-card" id="lotCard">
+                  <div class="rr-head">
+                    <div>
+                      <div class="panel-kicker">Position Sizing</div>
+                      <strong>Lot Size Calculator</strong>
+                    </div>
+                    <div class="rr-badge rr-badge-wait" id="lotStatusBadge">
+                      Incomplete
+                    </div>
+                  </div>
+
+                  <div class="form-grid compact-grid calc-input-grid">
+                    <div class="field">
+                      <label for="accountBalance">Account Balance</label>
+                      <input
+                        type="number"
+                        id="accountBalance"
+                        step="any"
+                        min="0"
+                        placeholder="10000"
+                      />
+                    </div>
+                    <div class="field">
+                      <label for="riskPercent">Risk %</label>
+                      <input
+                        type="number"
+                        id="riskPercent"
+                        step="any"
+                        min="0"
+                        placeholder="1"
+                      />
+                    </div>
+                  </div>
+
+                  <p class="rr-copy" id="lotSummary">
+                    Add account balance, risk percent, entry, and stop loss to
+                    calculate a suggested lot size.
+                  </p>
+
+                  <div class="rr-grid">
+                    <div class="rr-metric">
+                      <span>Target Risk</span>
+                      <strong id="lotRiskAmount">0.00</strong>
+                    </div>
+                    <div class="rr-metric">
+                      <span>Risk Per 1 Size</span>
+                      <strong id="lotPerUnitRisk">0.00</strong>
+                    </div>
+                    <div class="rr-metric">
+                      <span>Suggested Size</span>
+                      <strong id="lotSuggestedSize">0.00</strong>
+                    </div>
+                    <div class="rr-metric">
+                      <span>Current Size Risk</span>
+                      <strong id="lotCurrentRisk">0.00</strong>
+                    </div>
+                  </div>
+
+                  <div class="form-actions rr-actions">
+                    <button
+                      class="btn btn-secondary"
+                      id="applySuggestedSize"
+                      type="button"
+                      disabled
+                    >
+                      Use Suggested Size
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="field field-full">
                 <label for="notes">Notes</label>
                 <textarea
                   id="notes"

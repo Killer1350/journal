@@ -1,4 +1,5 @@
 const JOURNAL_KEY = "journal_v2";
+const LOT_SIZE_PREFS_KEY = "journal_lotcalc_v1";
 const numberFormatter = new Intl.NumberFormat("en-US", {
   minimumFractionDigits: 2,
   maximumFractionDigits: 2
@@ -128,6 +129,15 @@ const els = {
   exit: document.getElementById("exit"),
   stopLoss: document.getElementById("stopLoss"),
   takeProfit: document.getElementById("takeProfit"),
+  accountBalance: document.getElementById("accountBalance"),
+  riskPercent: document.getElementById("riskPercent"),
+  lotStatusBadge: document.getElementById("lotStatusBadge"),
+  lotSummary: document.getElementById("lotSummary"),
+  lotRiskAmount: document.getElementById("lotRiskAmount"),
+  lotPerUnitRisk: document.getElementById("lotPerUnitRisk"),
+  lotSuggestedSize: document.getElementById("lotSuggestedSize"),
+  lotCurrentRisk: document.getElementById("lotCurrentRisk"),
+  applySuggestedSize: document.getElementById("applySuggestedSize"),
   notes: document.getElementById("notes"),
   rrCard: document.getElementById("rrCard"),
   rrStatusBadge: document.getElementById("rrStatusBadge"),
@@ -193,6 +203,7 @@ let trades = loadTrades();
 let previewUrl = "";
 let tradeImageData = "";
 let tradeImageLoadPromise = Promise.resolve();
+const lotSizePrefs = loadLotSizePrefs();
 const filterState = {
   search: "",
   instrument: "all",
@@ -208,6 +219,42 @@ function loadTrades() {
   } catch (error) {
     console.warn("Could not parse saved journal data.", error);
     return [];
+  }
+}
+
+function loadLotSizePrefs() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOT_SIZE_PREFS_KEY) || "{}");
+    return {
+      accountBalance:
+        typeof saved.accountBalance === "string" ? saved.accountBalance : "",
+      riskPercent:
+        typeof saved.riskPercent === "string" && saved.riskPercent.trim()
+          ? saved.riskPercent
+          : "1"
+    };
+  } catch (error) {
+    console.warn("Could not parse lot size preferences.", error);
+    return {
+      accountBalance: "",
+      riskPercent: "1"
+    };
+  }
+}
+
+function saveLotSizePrefs() {
+  if (!els.accountBalance || !els.riskPercent) return;
+
+  try {
+    localStorage.setItem(
+      LOT_SIZE_PREFS_KEY,
+      JSON.stringify({
+        accountBalance: els.accountBalance.value,
+        riskPercent: els.riskPercent.value
+      })
+    );
+  } catch (error) {
+    console.warn("Could not save lot size preferences.", error);
   }
 }
 
@@ -320,6 +367,18 @@ function formatPriceValue(value) {
   });
 }
 
+function formatSizeValue(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric <= 0) return "0.00";
+
+  const digits =
+    numeric >= 1 ? 2 :
+    numeric >= 0.1 ? 3 :
+    4;
+
+  return numeric.toFixed(digits).replace(/\.?0+$/, "");
+}
+
 function buildTradeSnapshot(overrides = {}) {
   return {
     symbol: String(overrides.symbol ?? els.symbol.value ?? "").trim().toUpperCase(),
@@ -338,46 +397,48 @@ function buildTradeSnapshot(overrides = {}) {
       (readOptionalNumber(els.entry.value) ?? 0),
     exit:
       overrides.exit ??
-      (readOptionalNumber(els.exit.value) ?? 0)
+      (readOptionalNumber(els.exit.value) ?? 0),
+    stopLoss:
+      overrides.stopLoss ??
+      (readOptionalNumber(els.stopLoss.value) ?? ""),
+    takeProfit:
+      overrides.takeProfit ??
+      (readOptionalNumber(els.takeProfit.value) ?? "")
   };
 }
 
-function getRiskRewardMetrics(trade) {
+function getStopLossMetrics(trade) {
   const entry = readOptionalNumber(trade.entry);
   const stopLoss = readOptionalNumber(trade.stopLoss);
-  const takeProfit = readOptionalNumber(trade.takeProfit);
   const direction = trade.dir === "Short" ? "Short" : "Long";
 
-  if (entry === null || stopLoss === null || takeProfit === null) {
+  if (entry === null || stopLoss === null) {
     return {
       state: "wait",
-      message: "Add entry, stop loss, and take profit to calculate the setup."
+      message: "Add entry and stop loss to calculate risk."
     };
   }
 
   const riskDistance =
     direction === "Long" ? entry - stopLoss : stopLoss - entry;
-  const rewardDistance =
-    direction === "Long" ? takeProfit - entry : entry - takeProfit;
 
-  if (riskDistance <= 0 || rewardDistance <= 0) {
+  if (riskDistance <= 0) {
     const message =
       direction === "Long"
-        ? "For a long setup, stop loss should be below entry and take profit should be above entry."
-        : "For a short setup, stop loss should be above entry and take profit should be below entry.";
+        ? "For a long setup, stop loss should be below entry."
+        : "For a short setup, stop loss should be above entry.";
 
     return {
       state: "error",
       message,
-      riskDistance: Math.max(riskDistance, 0),
-      rewardDistance: Math.max(rewardDistance, 0)
+      riskDistance: Math.max(riskDistance, 0)
     };
   }
 
   const tradeBase = {
     ...trade,
     entry,
-    size: Number(trade.size) || 1
+    size: 1
   };
   const riskPnl = Math.abs(
     calculatePnl({
@@ -385,23 +446,89 @@ function getRiskRewardMetrics(trade) {
       exit: stopLoss
     })
   );
-  const rewardPnl = Math.abs(
-    calculatePnl({
-      ...tradeBase,
-      exit: takeProfit
-    })
-  );
-  const ratio = rewardDistance / riskDistance;
 
   return {
     state: "ready",
+    entry,
+    stopLoss,
+    direction,
     riskDistance,
+    riskPerUnit: riskPnl
+  };
+}
+
+function getRiskRewardMetrics(trade) {
+  const stopMetrics = getStopLossMetrics(trade);
+  const takeProfit = readOptionalNumber(trade.takeProfit);
+
+  if (stopMetrics.state === "error") {
+    return {
+      state: "error",
+      message: stopMetrics.message,
+      riskDistance: stopMetrics.riskDistance || 0
+    };
+  }
+
+  if (takeProfit === null) {
+    return {
+      state: "wait",
+      message: "Add entry, stop loss, and take profit to calculate the setup."
+    };
+  }
+
+  if (stopMetrics.state !== "ready") {
+    return {
+      state: "wait",
+      message: "Add entry, stop loss, and take profit to calculate the setup."
+    };
+  }
+
+  const rewardDistance =
+    stopMetrics.direction === "Long"
+      ? takeProfit - stopMetrics.entry
+      : stopMetrics.entry - takeProfit;
+
+  if (rewardDistance <= 0) {
+    const message =
+      stopMetrics.direction === "Long"
+        ? "For a long setup, take profit should be above entry."
+        : "For a short setup, take profit should be below entry.";
+
+    return {
+      state: "error",
+      message,
+      riskDistance: stopMetrics.riskDistance,
+      rewardDistance: Math.max(rewardDistance, 0)
+    };
+  }
+
+  const rewardPnl = Math.abs(
+    calculatePnl({
+      ...trade,
+      entry: stopMetrics.entry,
+      size: Number(trade.size) || 1,
+      exit: takeProfit
+    })
+  );
+  const riskPnl = Math.abs(
+    calculatePnl({
+      ...trade,
+      entry: stopMetrics.entry,
+      size: Number(trade.size) || 1,
+      exit: stopMetrics.stopLoss
+    })
+  );
+  const ratio = rewardDistance / stopMetrics.riskDistance;
+
+  return {
+    state: "ready",
+    riskDistance: stopMetrics.riskDistance,
     rewardDistance,
     riskPnl,
     rewardPnl,
     ratio,
     message:
-      direction +
+      stopMetrics.direction +
       " setup looks valid. Risk is " +
       formatSigned(-riskPnl) +
       " to SL and reward is " +
@@ -461,6 +588,104 @@ function updateRiskRewardCalculator(trade = buildTradeSnapshot()) {
   els.rrDistanceValue.textContent = "0.0000";
   els.rrRatioValue.textContent = "1:0.00";
   els.rrSummary.textContent = metrics.message;
+}
+
+function updateLotSizeCalculator(trade = buildTradeSnapshot()) {
+  if (
+    !els.lotStatusBadge ||
+    !els.lotSummary ||
+    !els.lotRiskAmount ||
+    !els.lotPerUnitRisk ||
+    !els.lotSuggestedSize ||
+    !els.lotCurrentRisk ||
+    !els.applySuggestedSize
+  ) {
+    return;
+  }
+
+  const accountBalance = readOptionalNumber(els.accountBalance.value);
+  const riskPercent = readOptionalNumber(els.riskPercent.value);
+  const stopMetrics = getStopLossMetrics(trade);
+  const currentSize = Number(trade.size) || 0;
+
+  els.lotStatusBadge.className = "rr-badge";
+  els.applySuggestedSize.disabled = true;
+  delete els.applySuggestedSize.dataset.size;
+
+  if (accountBalance === null || riskPercent === null) {
+    els.lotStatusBadge.classList.add("rr-badge-wait");
+    els.lotStatusBadge.textContent = "Incomplete";
+    els.lotRiskAmount.textContent = "0.00";
+    els.lotPerUnitRisk.textContent = "0.00";
+    els.lotSuggestedSize.textContent = "0.00";
+    els.lotCurrentRisk.textContent = "0.00";
+    els.lotSummary.textContent =
+      "Add account balance, risk percent, entry, and stop loss to calculate a suggested lot size.";
+    return;
+  }
+
+  if (accountBalance <= 0 || riskPercent <= 0) {
+    els.lotStatusBadge.classList.add("rr-badge-error");
+    els.lotStatusBadge.textContent = "Check Inputs";
+    els.lotRiskAmount.textContent = "0.00";
+    els.lotPerUnitRisk.textContent = "0.00";
+    els.lotSuggestedSize.textContent = "0.00";
+    els.lotCurrentRisk.textContent = "0.00";
+    els.lotSummary.textContent =
+      "Account balance and risk percent both need to be greater than zero.";
+    return;
+  }
+
+  if (stopMetrics.state === "error") {
+    els.lotStatusBadge.classList.add("rr-badge-error");
+    els.lotStatusBadge.textContent = "Check Levels";
+    els.lotRiskAmount.textContent = formatSigned(
+      -(accountBalance * riskPercent) / 100
+    );
+    els.lotPerUnitRisk.textContent = "0.00";
+    els.lotSuggestedSize.textContent = "0.00";
+    els.lotCurrentRisk.textContent = "0.00";
+    els.lotSummary.textContent = stopMetrics.message;
+    return;
+  }
+
+  if (stopMetrics.state !== "ready" || stopMetrics.riskPerUnit <= 0) {
+    els.lotStatusBadge.classList.add("rr-badge-wait");
+    els.lotStatusBadge.textContent = "Incomplete";
+    els.lotRiskAmount.textContent = formatSigned(
+      -(accountBalance * riskPercent) / 100
+    );
+    els.lotPerUnitRisk.textContent = "0.00";
+    els.lotSuggestedSize.textContent = "0.00";
+    els.lotCurrentRisk.textContent = "0.00";
+    els.lotSummary.textContent =
+      "Add account balance, risk percent, entry, and stop loss to calculate a suggested lot size.";
+    return;
+  }
+
+  const riskAmount = roundToCents((accountBalance * riskPercent) / 100);
+  const suggestedSize = riskAmount / stopMetrics.riskPerUnit;
+  const currentRisk = roundToCents(stopMetrics.riskPerUnit * currentSize);
+  const formattedSize = formatSizeValue(suggestedSize);
+
+  els.lotStatusBadge.classList.add("rr-badge-ready");
+  els.lotStatusBadge.textContent = "Ready";
+  els.lotRiskAmount.textContent = formatSigned(-riskAmount);
+  els.lotPerUnitRisk.textContent = formatSigned(-stopMetrics.riskPerUnit);
+  els.lotSuggestedSize.textContent = formattedSize;
+  els.lotCurrentRisk.textContent = formatSigned(-currentRisk);
+  els.lotSummary.textContent =
+    "Risking " +
+    riskPercent +
+    "% of " +
+    formatNumber(accountBalance) +
+    " gives " +
+    formatSigned(-riskAmount) +
+    ". Suggested size is " +
+    formattedSize +
+    ".";
+  els.applySuggestedSize.disabled = !Number.isFinite(suggestedSize) || suggestedSize <= 0;
+  els.applySuggestedSize.dataset.size = formattedSize;
 }
 
 function tradeMetaLine(trade) {
@@ -908,6 +1133,7 @@ function fillForm(trade) {
   renderTradeImagePreview(tradeImageData);
   showCustomField();
   updateRiskRewardCalculator(trade);
+  updateLotSizeCalculator(trade);
 
   els.formTitle.textContent = "Edit Trade";
   els.formSubtitle.textContent = "Update the entry so the workbook reflects the trade exactly as it was managed.";
@@ -916,6 +1142,13 @@ function fillForm(trade) {
 }
 
 function resetForm() {
+  const preservedBalance = els.accountBalance
+    ? els.accountBalance.value || lotSizePrefs.accountBalance
+    : "";
+  const preservedRiskPercent = els.riskPercent
+    ? els.riskPercent.value || lotSizePrefs.riskPercent
+    : "1";
+
   els.form.reset();
   els.tradeId.value = "";
   els.date.value = todayValue();
@@ -925,12 +1158,15 @@ function resetForm() {
   els.contract.value = "";
   els.stopLoss.value = "";
   els.takeProfit.value = "";
+  if (els.accountBalance) els.accountBalance.value = preservedBalance;
+  if (els.riskPercent) els.riskPercent.value = preservedRiskPercent;
   clearTradeImage();
   els.formTitle.textContent = "Add Trade";
   els.formSubtitle.textContent = "Log the position details immediately after execution so your review stays accurate.";
   els.saveButton.textContent = "Save Trade";
   showCustomField();
   updateRiskRewardCalculator();
+  updateLotSizeCalculator();
 }
 
 function removeTrade(id) {
@@ -1574,6 +1810,7 @@ els.clearAll.addEventListener("click", () => {
 els.instrument.addEventListener("change", () => {
   showCustomField();
   updateRiskRewardCalculator();
+  updateLotSizeCalculator();
 });
 els.tradeImage.addEventListener("change", handleTradeImageChange);
 els.removeTradeImage.addEventListener("click", clearTradeImage);
@@ -1624,8 +1861,29 @@ els.deskTabs.forEach((button) => {
   const eventName = field.tagName === "SELECT" ? "change" : "input";
   field.addEventListener(eventName, () => {
     updateRiskRewardCalculator();
+    updateLotSizeCalculator();
   });
 });
+[
+  els.accountBalance,
+  els.riskPercent
+].forEach((field) => {
+  if (!field) return;
+  field.addEventListener("input", () => {
+    saveLotSizePrefs();
+    updateLotSizeCalculator();
+  });
+});
+if (els.applySuggestedSize) {
+  els.applySuggestedSize.addEventListener("click", () => {
+    const nextSize = els.applySuggestedSize.dataset.size;
+    if (!nextSize) return;
+    els.size.value = nextSize;
+    updateRiskRewardCalculator();
+    updateLotSizeCalculator();
+    showToast("Applied suggested size.", "success");
+  });
+}
 els.chartForm.addEventListener("submit", analyzeChart);
 els.resetChart.addEventListener("click", resetChartDesk);
 els.chartImage.addEventListener("change", updateChartPreview);
@@ -1635,6 +1893,12 @@ els.copilotForm.addEventListener("submit", analyzeCopilot);
 els.resetCopilot.addEventListener("click", resetCopilotDesk);
 
 refreshServerStatus();
+if (els.accountBalance) {
+  els.accountBalance.value = lotSizePrefs.accountBalance;
+}
+if (els.riskPercent) {
+  els.riskPercent.value = lotSizePrefs.riskPercent;
+}
 resetForm();
 resetChartDesk();
 resetNewsDesk();
