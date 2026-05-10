@@ -1,4 +1,4 @@
-const OPENAI_API_BASE = (process.env.OPENAI_API_BASE || "https://api.groq.com/openai/v1").replace(/\/$/, "");
+const OPENAI_API_BASE = (process.env.OPENAI_API_BASE || "https://api.openai.com/v1").replace(/\/$/, "");
 const JSON_LIMIT_BYTES = 20 * 1024 * 1024;
 
 function jsonResponse(status, payload) {
@@ -50,7 +50,7 @@ export async function POST(request) {
   }
 
   try {
-    const response = await fetch(OPENAI_API_BASE + "/chat/completions", {
+    const response = await fetch(OPENAI_API_BASE + "/responses", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
