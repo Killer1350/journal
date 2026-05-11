@@ -2,7 +2,7 @@
   "name": "signalpro-workbook",
   "private": true,
   "version": "1.0.0",
-  "description": "Hosted trading workbook with server-protected OpenAI integration.",
+  "description": "Hosted trading workbook with server-protected Gemini integration.",
   "scripts": {
     "start": "node server.js"
   },

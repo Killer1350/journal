@@ -8,9 +8,9 @@ const TRADE_IMAGE_MAX_EDGE = 1400;
 const TRADE_IMAGE_QUALITY = 0.82;
 
 const serverModels = {
-  chart: "gpt-5-mini",
-  news: "gpt-5-mini",
-  copilot: "gpt-5-mini"
+  chart: "gemini-2.5-flash",
+  news: "gemini-2.5-flash",
+  copilot: "gemini-2.5-flash"
 };
 
 const instrumentLabels = {
@@ -198,7 +198,8 @@ const els = {
   deskTabs: Array.from(document.querySelectorAll(".desk-tab")),
   deskPanels: Array.from(document.querySelectorAll(".desk-panel")),
   topbarToggle: document.getElementById("topbarToggle"),
-  topbarNav: document.getElementById("topbarNav")
+  topbarNav: document.getElementById("topbarNav"),
+  topbarMenu: document.getElementById("topbarMenu")
 };
 
 let trades = loadTrades();
@@ -1246,7 +1247,7 @@ async function refreshServerStatus() {
     if (data.configured) {
       setStatus(els.aiConfigStatus, "ready", "Engine online");
       els.aiConfigNote.textContent =
-        "SignalPro engine is ready. Chart: " +
+        "SignalPro Gemini engine is ready. Chart: " +
         serverModels.chart +
         ". Macro: " +
         serverModels.news +
@@ -1255,7 +1256,7 @@ async function refreshServerStatus() {
         ".";
     } else {
       setStatus(els.aiConfigStatus, "wait", "Engine not configured");
-      els.aiConfigNote.textContent = "The backend is online but still needs a valid OpenAI key and billing on the server.";
+      els.aiConfigNote.textContent = "The backend is online but still needs a valid Gemini API key.";
     }
   } catch (error) {
     setStatus(els.aiConfigStatus, "error", "Engine offline");
@@ -1271,13 +1272,16 @@ function friendlyAiError(message) {
     normalized.includes("insufficient_quota") ||
     normalized.includes("exceeded your current quota") ||
     normalized.includes("billing") ||
-    normalized.includes("usage limit")
+    normalized.includes("usage limit") ||
+    normalized.includes("resource_exhausted") ||
+    normalized.includes("rate limit") ||
+    normalized.includes("429")
   ) {
-    return "The AI engine has hit its billing or quota limit. Add API credits or increase the server account's usage limit, then try again.";
+    return "The Gemini engine has hit its current quota or rate limit. Wait for the limit window to reset or switch to a higher Gemini tier, then try again.";
   }
 
   if (normalized.includes("api key")) {
-    return "The backend server is not configured with a working OpenAI key yet.";
+    return "The backend server is not configured with a working Gemini API key yet.";
   }
 
   if (normalized.includes("failed to fetch") || normalized.includes("network")) {
@@ -1296,8 +1300,8 @@ function readFileAsDataUrl(file) {
   });
 }
 
-async function callOpenAI(payload) {
-  const response = await fetch("/api/openai", {
+async function callGemini(payload) {
+  const response = await fetch("/api/gemini", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
@@ -1574,7 +1578,7 @@ async function analyzeChart(event) {
       ]
     };
 
-    const responseData = await callOpenAI(payload);
+    const responseData = await callGemini(payload);
     const parsed = JSON.parse(collectOutputText(responseData));
     renderChartAnalysis(parsed, els.chartSymbol.value.trim().toUpperCase(), els.chartTimeframe.value.trim());
     setStatus(els.chartStatus, "ready", "Chart analysis ready");
@@ -1644,7 +1648,7 @@ async function analyzeNews(event) {
       ]
     };
 
-    const responseData = await callOpenAI(payload);
+    const responseData = await callGemini(payload);
     const parsed = JSON.parse(collectOutputText(responseData));
     const citations = collectAnnotations(responseData);
     renderNewsAnalysis(parsed, symbol, citations);
@@ -1720,7 +1724,7 @@ async function analyzeCopilot(event) {
       payload.tools = [{ type: "web_search" }];
     }
 
-    const responseData = await callOpenAI(payload);
+    const responseData = await callGemini(payload);
     const parsed = JSON.parse(collectOutputText(responseData));
     renderCopilotAnalysis(parsed, topic, mode);
     setStatus(els.copilotStatus, "ready", "Copilot response ready");
@@ -1895,31 +1899,43 @@ els.copilotForm.addEventListener("submit", analyzeCopilot);
 els.resetCopilot.addEventListener("click", resetCopilotDesk);
 
 function setupMobileNavigation() {
+  const menu = els.topbarMenu;
   const nav = els.topbarNav;
   const toggle = els.topbarToggle;
-  if (!nav || !toggle) return;
+  if (!menu || !nav || !toggle) return;
 
   const closeNav = () => {
-    if (!nav.classList.contains("is-open")) return;
-    nav.classList.remove("is-open");
+    if (!menu.classList.contains("is-open")) return;
+    menu.classList.remove("is-open");
     toggle.setAttribute("aria-expanded", "false");
+    toggle.setAttribute("aria-label", "Open navigation menu");
   };
 
   toggle.addEventListener("click", (event) => {
     event.stopPropagation();
-    const isOpen = nav.classList.toggle("is-open");
+    const isOpen = menu.classList.toggle("is-open");
     toggle.setAttribute("aria-expanded", String(isOpen));
+    toggle.setAttribute(
+      "aria-label",
+      isOpen ? "Close navigation menu" : "Open navigation menu"
+    );
   });
 
-  nav.addEventListener("click", (event) => {
-    if (event.target.closest("a")) {
+  menu.addEventListener("click", (event) => {
+    if (event.target.closest("a, button")) {
       closeNav();
     }
   });
 
   document.addEventListener("click", (event) => {
-    if (!nav.classList.contains("is-open")) return;
-    if (!nav.contains(event.target) && !toggle.contains(event.target)) {
+    if (!menu.classList.contains("is-open")) return;
+    if (!menu.contains(event.target) && !toggle.contains(event.target)) {
+      closeNav();
+    }
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
       closeNav();
     }
   });

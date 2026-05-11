@@ -32,42 +32,44 @@
           </div>
         </a>
 
-        <nav class="topbar-nav" id="topbarNav" aria-label="Primary navigation">
-          <a href="#journalSection">Journal</a>
-          <a href="#formPanel">New Trade</a>
-          <a href="#aiSection">AI Desk</a>
-          <a href="#reviewPanel">Review</a>
-        </nav>
-
-        <div class="topbar-actions">
-          <button
-            class="btn btn-secondary btn-small"
-            id="clearJournalFilters"
-            type="button"
-          >
-            Clear Filters
-          </button>
-          <button
-            class="btn btn-primary btn-small"
-            id="exportJournal"
-            type="button"
-          >
-            Export CSV
-          </button>
-        </div>
-
         <button
           class="topbar-toggle"
           id="topbarToggle"
-          aria-label="Toggle navigation"
+          aria-label="Open navigation menu"
           aria-expanded="false"
-          aria-controls="topbarNav"
+          aria-controls="topbarMenu"
           type="button"
         >
           <span class="topbar-toggle__line"></span>
           <span class="topbar-toggle__line"></span>
           <span class="topbar-toggle__line"></span>
         </button>
+
+        <div class="topbar-menu" id="topbarMenu">
+          <nav class="topbar-nav" id="topbarNav" aria-label="Primary navigation">
+            <a href="#journalSection">Journal</a>
+            <a href="#formPanel">New Trade</a>
+            <a href="#aiSection">AI Desk</a>
+            <a href="#reviewPanel">Review</a>
+          </nav>
+
+          <div class="topbar-actions">
+            <button
+              class="btn btn-secondary btn-small"
+              id="clearJournalFilters"
+              type="button"
+            >
+              Clear Filters
+            </button>
+            <button
+              class="btn btn-primary btn-small"
+              id="exportJournal"
+              type="button"
+            >
+              Export CSV
+            </button>
+          </div>
+        </div>
       </header>
 
       <main class="workspace">

@@ -8,11 +8,13 @@ loadEnv(path.join(__dirname, ".env"));
 
 const PORT = Number(process.env.PORT) || 3000;
 const HOST = process.env.HOST || "0.0.0.0";
-const OPENAI_API_KEY = process.env.OPENAI_API_KEY || "";
-const OPENAI_API_BASE = (process.env.OPENAI_API_BASE || "https://api.openai.com/v1").replace(/\/$/, "");
-const CHART_MODEL = process.env.OPENAI_CHART_MODEL || "gpt-5-mini";
-const NEWS_MODEL = process.env.OPENAI_NEWS_MODEL || "gpt-5-mini";
-const COPILOT_MODEL = process.env.OPENAI_COPILOT_MODEL || "gpt-5-mini";
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY || "";
+const GEMINI_API_BASE = (
+  process.env.GEMINI_API_BASE || "https://generativelanguage.googleapis.com/v1beta"
+).replace(/\/$/, "");
+const CHART_MODEL = process.env.GEMINI_CHART_MODEL || "gemini-2.5-flash";
+const NEWS_MODEL = process.env.GEMINI_NEWS_MODEL || "gemini-2.5-flash";
+const COPILOT_MODEL = process.env.GEMINI_COPILOT_MODEL || "gemini-2.5-flash";
 const ROOT = __dirname;
 const JSON_LIMIT_BYTES = 20 * 1024 * 1024;
 
@@ -118,11 +120,164 @@ async function serveStatic(url, res) {
   }
 }
 
-async function proxyOpenAI(req, res) {
-  if (!OPENAI_API_KEY) {
+function parseDataUrl(dataUrl) {
+  const match = /^data:([^;,]+);base64,(.+)$/i.exec(String(dataUrl || ""));
+  if (!match) {
+    throw new Error("Invalid image format. Upload the screenshot again.");
+  }
+
+  return {
+    mimeType: match[1],
+    data: match[2]
+  };
+}
+
+function buildGeminiParts(items) {
+  const parts = [];
+
+  (items || []).forEach((item) => {
+    if (!item || typeof item !== "object") return;
+
+    if (item.type === "input_text" && typeof item.text === "string" && item.text.trim()) {
+      parts.push({ text: item.text.trim() });
+      return;
+    }
+
+    if (item.type === "input_image" && typeof item.image_url === "string" && item.image_url.trim()) {
+      const image = parseDataUrl(item.image_url.trim());
+      parts.push({
+        inlineData: {
+          mimeType: image.mimeType,
+          data: image.data
+        }
+      });
+    }
+  });
+
+  return parts;
+}
+
+function translatePayloadToGemini(payload) {
+  const messages = Array.isArray(payload?.input) ? payload.input : [];
+  const systemText = [];
+  const contents = [];
+
+  messages.forEach((message) => {
+    const parts = buildGeminiParts(message?.content);
+    if (!parts.length) return;
+
+    if (message?.role === "system") {
+      parts.forEach((part) => {
+        if (typeof part.text === "string" && part.text.trim()) {
+          systemText.push(part.text.trim());
+        }
+      });
+      return;
+    }
+
+    contents.push({
+      role: message?.role === "assistant" ? "model" : "user",
+      parts
+    });
+  });
+
+  if (!contents.length) {
+    throw new Error("Missing usable prompt content.");
+  }
+
+  const requestBody = {
+    contents
+  };
+
+  if (systemText.length) {
+    requestBody.systemInstruction = {
+      role: "system",
+      parts: [{ text: systemText.join("\n\n") }]
+    };
+  }
+
+  const schema = payload?.text?.format?.schema;
+  if (schema && typeof schema === "object") {
+    requestBody.generationConfig = {
+      responseMimeType: "application/json",
+      responseJsonSchema: schema
+    };
+  }
+
+  if (Array.isArray(payload?.tools) && payload.tools.some((tool) => tool?.type === "web_search")) {
+    requestBody.tools = [
+      {
+        googleSearchRetrieval: {
+          dynamicRetrievalConfig: {
+            mode: "MODE_DYNAMIC",
+            dynamicThreshold: 0.7
+          }
+        }
+      }
+    ];
+  }
+
+  return requestBody;
+}
+
+function collectGeminiAnnotations(responseData) {
+  const chunks = responseData?.candidates?.[0]?.groundingMetadata?.groundingChunks || [];
+  const seen = new Set();
+  const annotations = [];
+
+  chunks.forEach((chunk) => {
+    const source = chunk?.web || chunk?.retrievedContext || chunk?.maps || null;
+    const url = source?.uri || "";
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    annotations.push({
+      url,
+      title: source?.title || url
+    });
+  });
+
+  return annotations;
+}
+
+function normalizeGeminiResponse(responseData) {
+  const candidate = responseData?.candidates?.[0] || {};
+  const parts = candidate?.content?.parts || [];
+  const outputText = parts
+    .map((part) => (typeof part?.text === "string" ? part.text.trim() : ""))
+    .filter(Boolean)
+    .join("\n")
+    .trim();
+
+  if (!outputText) {
+    const blockReason = responseData?.promptFeedback?.blockReason;
+    if (blockReason) {
+      throw new Error("Gemini blocked this request: " + blockReason + ".");
+    }
+    throw new Error("Gemini returned an empty response.");
+  }
+
+  return {
+    output_text: outputText,
+    output: [
+      {
+        role: "assistant",
+        content: [
+          {
+            type: "output_text",
+            text: outputText,
+            annotations: collectGeminiAnnotations(responseData)
+          }
+        ]
+      }
+    ]
+  };
+}
+
+async function proxyGemini(req, res) {
+  if (!GEMINI_API_KEY) {
     sendJson(res, 503, {
       error: {
-        message: "Server AI is not configured yet. Add OPENAI_API_KEY to the .env file on the server."
+        message: "Server AI is not configured yet. Add GEMINI_API_KEY to the .env file on the server."
       }
     });
     return;
@@ -143,26 +298,33 @@ async function proxyOpenAI(req, res) {
   }
 
   try {
-    const response = await fetch(OPENAI_API_BASE + "/responses", {
+    const model = String(payload.model || CHART_MODEL).trim();
+    const modelPath = model.startsWith("models/") ? model : "models/" + model;
+    const response = await fetch(GEMINI_API_BASE + "/" + modelPath + ":generateContent", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + OPENAI_API_KEY
+        "x-goog-api-key": GEMINI_API_KEY
       },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(translatePayloadToGemini(payload))
     });
 
-    const text = await response.text();
-    const contentType = response.headers.get("content-type") || "application/json; charset=utf-8";
-    res.writeHead(response.status, {
-      "Content-Type": contentType,
-      "Cache-Control": "no-store"
-    });
-    res.end(text);
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      sendJson(res, response.status, data?.error ? data : {
+        error: {
+          message: data?.error?.message || "Gemini request failed."
+        }
+      });
+      return;
+    }
+
+    sendJson(res, 200, normalizeGeminiResponse(data));
   } catch (error) {
     sendJson(res, 502, {
       error: {
-        message: "Unable to reach OpenAI from the server.",
+        message: "Unable to reach Gemini from the server.",
         details: error.message
       }
     });
@@ -174,17 +336,21 @@ const server = http.createServer(async (req, res) => {
 
   if (req.method === "GET" && url.pathname === "/api/health") {
     sendJson(res, 200, {
-      configured: Boolean(OPENAI_API_KEY),
+      provider: "gemini",
+      configured: Boolean(GEMINI_API_KEY),
       chartModel: CHART_MODEL,
       newsModel: NEWS_MODEL,
       copilotModel: COPILOT_MODEL,
-      apiBase: OPENAI_API_BASE
+      apiBase: GEMINI_API_BASE
     });
     return;
   }
 
-  if (req.method === "POST" && url.pathname === "/api/openai") {
-    await proxyOpenAI(req, res);
+  if (
+    req.method === "POST" &&
+    (url.pathname === "/api/gemini" || url.pathname === "/api/openai")
+  ) {
+    await proxyGemini(req, res);
     return;
   }
 
